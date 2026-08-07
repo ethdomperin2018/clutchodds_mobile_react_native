@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/features/auth/SessionProvider";
+import { ApiError } from "@/lib/api/client";
 import {
   loginSchema,
   type LoginFormValues,
@@ -65,6 +66,13 @@ export function MarketingHomeScreen() {
       await login(values.email, values.password);
       router.replace("/(app)/(tabs)/dashboard");
     } catch (error) {
+      if (error instanceof ApiError && error.code === "EMAIL_NOT_VERIFIED") {
+        router.replace({
+          pathname: "/(auth)/verify-email",
+          params: { email: error.email ?? values.email },
+        });
+        return;
+      }
       setFormError(
         error instanceof Error ? error.message : "Unable to sign in."
       );
@@ -183,9 +191,7 @@ export function MarketingHomeScreen() {
             ) : null}
 
             <Pressable
-              onPress={() => {
-                // UI-only for now
-              }}
+              onPress={() => router.push("/(auth)/forgot-password")}
               style={styles.forgotPressable}
             >
               <Text style={styles.forgotText}>Forgot password?</Text>

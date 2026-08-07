@@ -5,7 +5,9 @@ import type { ApiErrorPayload } from "./types";
 export class ApiError extends Error {
   constructor(
     message: string,
-    readonly status: number
+    readonly status: number,
+    readonly code?: string,
+    readonly email?: string
   ) {
     super(message);
     this.name = "ApiError";
@@ -22,24 +24,21 @@ async function buildHeaders(headers?: HeadersInit) {
 
   const sessionHint = await sessionStorage.getSessionHint();
   if (sessionHint) {
-    // Current backend is cookie-based; this placeholder header gives us a
-    // future escape hatch for native token auth without changing callers.
     nextHeaders.set("x-session-hint", sessionHint);
   }
 
   return nextHeaders;
 }
 
-async function readError(response: Response) {
+async function readErrorPayload(response: Response): Promise<ApiErrorPayload> {
   try {
-    const payload = (await response.json()) as ApiErrorPayload;
-    return payload.error ?? "Request failed.";
+    return (await response.json()) as ApiErrorPayload;
   } catch {
-    return "Request failed.";
+    return { error: "Request failed." };
   }
 }
 
-const DEFAULT_TIMEOUT_MS = 8_000;
+const DEFAULT_TIMEOUT_MS = 20_000;
 
 export async function apiRequest<T>(
   path: string,
@@ -65,7 +64,13 @@ export async function apiRequest<T>(
     });
 
     if (!response.ok) {
-      throw new ApiError(await readError(response), response.status);
+      const payload = await readErrorPayload(response);
+      throw new ApiError(
+        payload.error ?? "Request failed.",
+        response.status,
+        payload.code,
+        payload.email
+      );
     }
 
     return (await response.json()) as T;

@@ -47,10 +47,7 @@ export function BookmakersScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    padding: spacing.lg,
-    paddingBottom: 0,
     gap: spacing.sm,
-    backgroundColor: colors.background,
   },
   title: {
     ...typography.pageTitle,

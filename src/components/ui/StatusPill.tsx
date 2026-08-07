@@ -13,11 +13,11 @@ const toneStyles = {
     textColor: colors.primary,
   },
   info: {
-    backgroundColor: "#10263A",
+    backgroundColor: "rgba(56,189,248,0.12)",
     textColor: colors.info,
   },
   warning: {
-    backgroundColor: "#3A2D12",
+    backgroundColor: "rgba(250,204,21,0.12)",
     textColor: colors.warning,
   },
 } as const;

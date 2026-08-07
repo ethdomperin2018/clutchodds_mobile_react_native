@@ -128,8 +128,11 @@ export function SignupScreen() {
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
     try {
-      await signup(values.name, values.email, values.password);
-      router.replace("/(app)/(tabs)/dashboard");
+      const result = await signup(values.name, values.email, values.password);
+      router.replace({
+        pathname: "/(auth)/verify-email",
+        params: { email: result.requiresVerification ? result.email : values.email },
+      });
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : "Unable to create account."
@@ -143,146 +146,151 @@ export function SignupScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            compact ? styles.contentCompact : null,
-          ]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.screen}>
-            <Pressable
-              accessibilityLabel="Go back"
-              hitSlop={12}
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.replace("/(marketing)");
-                }
-              }}
-              style={styles.backButton}
-            >
-              <Ionicons color="#FFFFFF" name="arrow-back" size={22} />
-            </Pressable>
+        <View style={styles.flex}>
+          <Pressable
+            accessibilityLabel="Go back"
+            hitSlop={12}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/(marketing)");
+              }
+            }}
+            style={styles.backButton}
+          >
+            <Ionicons color="#FFFFFF" name="arrow-back" size={22} />
+          </Pressable>
 
-            <View style={styles.header}>
-              <Text style={[styles.title, compact ? styles.titleCompact : null]}>
-                Create your account
-              </Text>
-              <Text style={styles.subtitle}>Join ClutchOdds today.</Text>
-            </View>
-
-            <View style={styles.form}>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, value } }) => (
-                  <AuthField
-                    autoCapitalize="words"
-                    error={errors.name?.message}
-                    icon="person-outline"
-                    onChangeText={onChange}
-                    placeholder="Full Name"
-                    textContentType="name"
-                    value={value}
-                  />
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, value } }) => (
-                  <AuthField
-                    error={errors.email?.message}
-                    icon="mail-outline"
-                    keyboardType="email-address"
-                    onChangeText={onChange}
-                    placeholder="Email"
-                    textContentType="emailAddress"
-                    value={value}
-                  />
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <AuthField
-                    error={errors.password?.message}
-                    icon="lock-closed-outline"
-                    onChangeText={onChange}
-                    placeholder="Password"
-                    secureTextEntry
-                    showToggle
-                    textContentType="newPassword"
-                    value={value}
-                  />
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, value } }) => (
-                  <AuthField
-                    error={errors.confirmPassword?.message}
-                    icon="lock-closed-outline"
-                    onChangeText={onChange}
-                    placeholder="Confirm Password"
-                    secureTextEntry
-                    showToggle
-                    textContentType="newPassword"
-                    value={value}
-                  />
-                )}
-              />
-
-              <View style={styles.checklist}>
-                <PasswordCheck label="8+ characters" ok={checks.minLength} />
-                <PasswordCheck label="1 number" ok={checks.hasNumber} />
-                <PasswordCheck
-                  label="1 uppercase letter"
-                  ok={checks.hasUppercase}
-                />
+          <ScrollView
+            contentContainerStyle={[
+              styles.content,
+              compact ? styles.contentCompact : null,
+            ]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.screen}>
+              <View style={styles.header}>
+                <Text
+                  style={[styles.title, compact ? styles.titleCompact : null]}
+                >
+                  Create your account
+                </Text>
+                <Text style={styles.subtitle}>Join ClutchOdds today.</Text>
               </View>
 
-              {formError ? (
-                <Text style={styles.formError}>{formError}</Text>
-              ) : null}
+              <View style={styles.form}>
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({ field: { onChange, value } }) => (
+                    <AuthField
+                      autoCapitalize="words"
+                      error={errors.name?.message}
+                      icon="person-outline"
+                      onChangeText={onChange}
+                      placeholder="Full Name"
+                      textContentType="name"
+                      value={value}
+                    />
+                  )}
+                />
 
-              <Pressable
-                disabled={isSubmitting}
-                onPress={() => void onSubmit()}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  pressed ? styles.pressed : null,
-                  isSubmitting ? styles.disabled : null,
-                ]}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {isSubmitting ? "Creating account..." : "Create Account"}
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <AuthField
+                      error={errors.email?.message}
+                      icon="mail-outline"
+                      keyboardType="email-address"
+                      onChangeText={onChange}
+                      placeholder="Email"
+                      textContentType="emailAddress"
+                      value={value}
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <AuthField
+                      error={errors.password?.message}
+                      icon="lock-closed-outline"
+                      onChangeText={onChange}
+                      placeholder="Password"
+                      secureTextEntry
+                      showToggle
+                      textContentType="newPassword"
+                      value={value}
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, value } }) => (
+                    <AuthField
+                      error={errors.confirmPassword?.message}
+                      icon="lock-closed-outline"
+                      onChangeText={onChange}
+                      placeholder="Confirm Password"
+                      secureTextEntry
+                      showToggle
+                      textContentType="newPassword"
+                      value={value}
+                    />
+                  )}
+                />
+
+                <View style={styles.checklist}>
+                  <PasswordCheck label="8+ characters" ok={checks.minLength} />
+                  <PasswordCheck label="1 number" ok={checks.hasNumber} />
+                  <PasswordCheck
+                    label="1 uppercase letter"
+                    ok={checks.hasUppercase}
+                  />
+                </View>
+
+                {formError ? (
+                  <Text style={styles.formError}>{formError}</Text>
+                ) : null}
+
+                <Pressable
+                  disabled={isSubmitting}
+                  onPress={() => void onSubmit()}
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed ? styles.pressed : null,
+                    isSubmitting ? styles.disabled : null,
+                  ]}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {isSubmitting ? "Creating account..." : "Create Account"}
+                  </Text>
+                </Pressable>
+
+                <Text style={styles.legal}>
+                  By signing up, you agree to our{" "}
+                  <Text style={styles.legalLink}>Terms of Service</Text>
+                  {"\n"}and{" "}
+                  <Text style={styles.legalLink}>Privacy Policy</Text>.
                 </Text>
-              </Pressable>
+              </View>
 
-              <Text style={styles.legal}>
-                By signing up, you agree to our{" "}
-                <Text style={styles.legalLink}>Terms of Service</Text>
-                {"\n"}and <Text style={styles.legalLink}>Privacy Policy</Text>.
-              </Text>
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Already have an account? </Text>
+                <Pressable onPress={() => router.replace("/(marketing)")}>
+                  <Text style={styles.footerLink}>Log in</Text>
+                </Pressable>
+              </View>
             </View>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
-              <Pressable onPress={() => router.replace("/(marketing)")}>
-                <Text style={styles.footerLink}>Log in</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -301,11 +309,11 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingTop: 28,
+    paddingTop: 56,
     paddingBottom: 52,
   },
   contentCompact: {
-    paddingTop: 20,
+    paddingTop: 52,
     paddingBottom: 40,
     justifyContent: "flex-start",
   },
@@ -316,11 +324,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   backButton: {
+    position: "absolute",
+    top: 8,
+    left: 24,
     width: 40,
     height: 40,
     alignItems: "flex-start",
     justifyContent: "center",
-    marginBottom: 8,
+    zIndex: 2,
   },
   header: {
     marginBottom: 24,
