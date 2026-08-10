@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -92,7 +92,7 @@ export function VerifyEmailScreen() {
     setSubmitting(true);
     try {
       await verifyEmail(email, code);
-      router.replace("/(app)/(tabs)/dashboard");
+      router.replace("/(app)/(tabs)/" as Href);
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : "Unable to verify email."

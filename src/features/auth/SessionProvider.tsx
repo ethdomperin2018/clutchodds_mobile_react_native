@@ -10,6 +10,11 @@ import {
 import { env } from "@/config/env";
 import { authApi } from "@/lib/api/endpoints/auth";
 import { queryClient } from "@/lib/query/query-client";
+import {
+  GoogleSignInCancelledError,
+  GoogleSignInRedirectingError,
+  signInWithGoogleBrowser,
+} from "./googleSignIn";
 import { sessionStorage } from "./session-storage";
 import { useSessionStore } from "@/stores/session-store";
 import type { AuthUser } from "@/types/auth";
@@ -30,6 +35,8 @@ type SessionContextValue = {
   ) => Promise<SignupOutcome>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendVerification: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
+  completeGoogleSignIn: (sessionToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<AuthUser | null>;
 };
@@ -103,18 +110,26 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
     const bootstrap = async () => {
       try {
-        const cachedUser = await sessionStorage.getUser();
+        const [cachedUser, sessionHint] = await Promise.all([
+          sessionStorage.getUser(),
+          sessionStorage.getSessionHint(),
+        ]);
+
         if (mounted && cachedUser) {
           setUser(cachedUser);
+        }
+
+        // On web, wait for /me when we have a stored session so refresh
+        // doesn't flash the login page before the session restores.
+        if (mounted && !env.uiOnly && (sessionHint || cachedUser)) {
+          await refresh();
+        } else if (mounted && !env.uiOnly) {
+          void refresh();
         }
       } finally {
         if (mounted) {
           setReady(true);
         }
-      }
-
-      if (mounted && !env.uiOnly) {
-        await refresh();
       }
     };
 
@@ -186,6 +201,48 @@ export function SessionProvider({ children }: PropsWithChildren) {
     await authApi.resendVerification(email);
   }, []);
 
+  const completeGoogleSignIn = useCallback(
+    async (sessionToken: string) => {
+      if (env.uiOnly) {
+        await persistUser(
+          mockUser({ email: "google.user@example.com", name: "Google User" }),
+          sessionToken
+        );
+        return;
+      }
+
+      await sessionStorage.setSessionHint(sessionToken);
+      const response = await authApi.me();
+      await persistUser(response.user ?? null, sessionToken);
+      await queryClient.invalidateQueries();
+    },
+    [persistUser]
+  );
+
+  const signInWithGoogle = useCallback(async () => {
+    if (env.uiOnly) {
+      await persistUser(
+        mockUser({ email: "google.user@example.com", name: "Google User" }),
+        "ui-google-session"
+      );
+      return true;
+    }
+
+    try {
+      const sessionToken = await signInWithGoogleBrowser();
+      await completeGoogleSignIn(sessionToken);
+      return true;
+    } catch (error) {
+      if (
+        error instanceof GoogleSignInCancelledError ||
+        error instanceof GoogleSignInRedirectingError
+      ) {
+        return false;
+      }
+      throw error;
+    }
+  }, [completeGoogleSignIn, persistUser]);
+
   const logout = useCallback(async () => {
     try {
       if (!env.uiOnly) {
@@ -207,6 +264,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
       signup,
       verifyEmail,
       resendVerification,
+      signInWithGoogle,
+      completeGoogleSignIn,
       logout,
       refresh,
     }),
@@ -218,6 +277,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
       signup,
       verifyEmail,
       resendVerification,
+      signInWithGoogle,
+      completeGoogleSignIn,
       logout,
       refresh,
     ]

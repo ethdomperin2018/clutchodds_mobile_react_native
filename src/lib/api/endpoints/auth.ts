@@ -41,4 +41,9 @@ export const authApi = {
     apiRequest<{ success?: boolean; ok?: boolean }>("/api/auth/logout", {
       method: "POST",
     }),
+  googleToken: (idToken: string) =>
+    apiRequest<AuthResponse>("/api/auth/google/token", {
+      method: "POST",
+      body: { idToken },
+    }),
 };

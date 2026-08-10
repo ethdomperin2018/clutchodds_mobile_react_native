@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -22,6 +22,7 @@ import {
   type LoginFormValues,
 } from "@/features/auth/schemas";
 import { fonts } from "@/theme/typography";
+import { separatorLineStyle } from "@/theme/separator";
 
 const brandLogo = require("../../../../assets/images/logo-tight.jpg");
 const heroNetwork = require("../../../../assets/images/hero-network.png");
@@ -40,10 +41,11 @@ function HeroNetworkEffect() {
 }
 
 export function MarketingHomeScreen() {
-  const { login } = useSession();
+  const { login, signInWithGoogle } = useSession();
   const { height: windowHeight } = useWindowDimensions();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   const compact = windowHeight < 720;
   const headlineSize = compact ? 32 : 38;
@@ -64,7 +66,7 @@ export function MarketingHomeScreen() {
     setFormError(null);
     try {
       await login(values.email, values.password);
-      router.replace("/(app)/(tabs)/dashboard");
+      router.replace("/(app)/(tabs)/" as Href);
     } catch (error) {
       if (error instanceof ApiError && error.code === "EMAIL_NOT_VERIFIED") {
         router.replace({
@@ -78,6 +80,23 @@ export function MarketingHomeScreen() {
       );
     }
   });
+
+  const onGooglePress = async () => {
+    setFormError(null);
+    setGoogleSubmitting(true);
+    try {
+      const signedIn = await signInWithGoogle();
+      if (signedIn) {
+        router.replace("/(app)/(tabs)/" as Href);
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Unable to sign in with Google."
+      );
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
@@ -216,18 +235,18 @@ export function MarketingHomeScreen() {
             </Pressable>
 
             <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, separatorLineStyle]} />
               <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, separatorLineStyle]} />
             </View>
 
             <Pressable
-              onPress={() => {
-                // Google OAuth UI only for this pass
-              }}
+              disabled={isSubmitting || googleSubmitting}
+              onPress={() => void onGooglePress()}
               style={({ pressed }) => [
                 styles.googleButton,
                 pressed ? styles.pressed : null,
+                googleSubmitting ? styles.disabled : null,
               ]}
             >
               <Image
@@ -236,7 +255,9 @@ export function MarketingHomeScreen() {
                 source={googleIcon}
                 style={styles.googleIcon}
               />
-              <Text style={styles.googleButtonText}>Google</Text>
+              <Text style={styles.googleButtonText}>
+                {googleSubmitting ? "Connecting…" : "Google"}
+              </Text>
             </Pressable>
           </View>
 
@@ -407,8 +428,6 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(255,255,255,0.16)",
   },
   dividerText: {
     fontFamily: fonts.sansRegular,

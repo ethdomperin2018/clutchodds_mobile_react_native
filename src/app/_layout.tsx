@@ -22,6 +22,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(marketing)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="auth/google" />
         <Stack.Screen name="(app)" />
       </Stack>
     </AppProviders>

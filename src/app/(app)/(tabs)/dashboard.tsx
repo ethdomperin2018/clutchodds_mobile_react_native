@@ -1,3 +1,6 @@
-import { DashboardScreen } from "@/features/dashboard/screens/DashboardScreen";
+import { Redirect, type Href } from "expo-router";
 
-export default DashboardScreen;
+/** Old /dashboard bookmarks → home tab. */
+export default function DashboardRedirect() {
+  return <Redirect href={"/(app)/(tabs)/" as Href} />;
+}

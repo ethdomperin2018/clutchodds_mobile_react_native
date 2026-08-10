@@ -1,4 +1,4 @@
-import { Redirect, Stack, usePathname } from "expo-router";
+import { Redirect, Stack, usePathname, type Href } from "expo-router";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { useSession } from "@/features/auth/SessionProvider";
 
@@ -15,7 +15,7 @@ export default function AuthLayout() {
 
   // Allow verify/reset flows even if a stale session exists.
   if (user && !allowSignedInAuthFlow) {
-    return <Redirect href="/(app)/(tabs)/dashboard" />;
+    return <Redirect href={"/(app)/(tabs)/" as Href} />;
   }
 
   return (
@@ -25,6 +25,8 @@ export default function AuthLayout() {
       <Stack.Screen name="verify-email" />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="reset-password" />
+      <Stack.Screen name="terms" />
+      <Stack.Screen name="privacy" />
     </Stack>
   );
 }

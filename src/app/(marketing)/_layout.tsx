@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack, type Href } from "expo-router";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { useSession } from "@/features/auth/SessionProvider";
 
@@ -10,7 +10,7 @@ export default function MarketingLayout() {
   }
 
   if (user) {
-    return <Redirect href="/(app)/(tabs)/dashboard" />;
+    return <Redirect href={"/(app)/(tabs)/" as Href} />;
   }
 
   return (

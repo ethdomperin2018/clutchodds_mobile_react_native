@@ -18,18 +18,28 @@ export function SettingsScreen() {
   return (
     <AppScreen>
       <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={styles.title}>Profile</Text>
         <Text style={styles.subtitle}>
-          Account, alerts, and app behavior can all hang off this route group without polluting feature screens.
+          Account session and profile details for your Clutch Odds login.
         </Text>
       </View>
 
       <SectionCard
         title="Account session"
-        description="Current scaffold keeps session state in Zustand, persists the last user snapshot in SecureStore, and exposes refresh/login/logout hooks through context."
+        description="Signed-in identity and session controls for this device."
       >
-        <Text style={styles.row}>Signed in as: <Text style={styles.value}>{user?.email ?? "Guest"}</Text></Text>
-        <PrimaryButton label="Log out" onPress={() => void handleLogout()} variant="ghost" />
+        <Text style={styles.row}>
+          Signed in as:{" "}
+          <Text style={styles.value}>{user?.email ?? "Guest"}</Text>
+        </Text>
+        <Text style={styles.row}>
+          Name: <Text style={styles.value}>{user?.name ?? "—"}</Text>
+        </Text>
+        <PrimaryButton
+          label="Log out"
+          onPress={() => void handleLogout()}
+          variant="ghost"
+        />
       </SectionCard>
     </AppScreen>
   );

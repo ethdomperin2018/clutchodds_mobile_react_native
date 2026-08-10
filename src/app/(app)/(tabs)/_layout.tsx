@@ -1,141 +1,141 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  NavIconAlerts,
+  NavIconArbitrage,
+  NavIconDashboard,
+  NavIconEdgeCenter,
+  NavIconMore,
+  NavIconProfile,
+} from "@/components/icons/appNavIcons";
+import { MoreTabButton } from "@/features/more/MoreTabButton";
+import { SEPARATOR_THICKNESS, separatorColor } from "@/theme/separator";
 import { colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
-type TabIconProps = {
-  color: string;
-  size: number;
-  focused: boolean;
-  name: keyof typeof Ionicons.glyphMap;
-  nameFocused: keyof typeof Ionicons.glyphMap;
+/** Default tab when opening /(app)/(tabs) without a specific screen. */
+export const unstable_settings = {
+  initialRouteName: "index",
 };
 
-function TabIcon({ color, size, focused, name, nameFocused }: TabIconProps) {
+/** Drawn as a View — CSS/border hairlines often disappear on iPhone Retina. */
+function TabBarBackground() {
   return (
-    <Ionicons
-      color={color}
-      name={focused ? nameFocused : name}
-      size={size}
-    />
+    <View style={styles.tabBarBackground}>
+      <View style={styles.tabBarTopLine} />
+    </View>
   );
 }
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  // Web often reports 0 inset — keep room so labels aren't clipped.
   const bottomPad = Math.max(insets.bottom, Platform.OS === "web" ? 12 : 8);
-  const contentHeight = 62;
+  const contentHeight = 58;
 
   return (
     <Tabs
+      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarInactiveTintColor: "#E8E8EC",
         tabBarLabelStyle: styles.tabLabel,
         tabBarItemStyle: styles.tabItem,
         tabBarIconStyle: styles.tabIcon,
+        tabBarBackground: () => <TabBarBackground />,
         tabBarStyle: [
           styles.tabBar,
           {
             height: contentHeight + bottomPad,
             paddingBottom: bottomPad,
-            paddingTop: 8,
+            paddingTop: 6,
           },
         ],
       }}
     >
       <Tabs.Screen
-        name="dashboard"
+        name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              color={String(color)}
-              focused={focused}
-              name="grid-outline"
-              nameFocused="grid"
-              size={size}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="arbitrage"
-        options={{
-          title: "Arbs",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              color={String(color)}
-              focused={focused}
-              name="flash-outline"
-              nameFocused="flash"
-              size={size}
-            />
+          title: "Dashboard",
+          tabBarIcon: ({ color, size }) => (
+            <NavIconDashboard color={String(color)} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="edge-center"
         options={{
-          title: "Edge",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              color={String(color)}
-              focused={focused}
-              name="analytics-outline"
-              nameFocused="analytics"
-              size={size}
-            />
+          title: "Edge Center",
+          tabBarIcon: ({ color, size }) => (
+            <NavIconEdgeCenter color={String(color)} size={size} />
           ),
         }}
       />
       <Tabs.Screen
-        name="my-bets"
+        name="arbitrage"
         options={{
-          title: "Bets",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              color={String(color)}
-              focused={focused}
-              name="receipt-outline"
-              nameFocused="receipt"
-              size={size}
-            />
+          title: "Arbitrage",
+          tabBarIcon: ({ color, size }) => (
+            <NavIconArbitrage color={String(color)} size={size} />
           ),
         }}
       />
       <Tabs.Screen
-        name="bookmakers"
+        name="alerts"
         options={{
-          title: "Books",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              color={String(color)}
-              focused={focused}
-              name="business-outline"
-              nameFocused="business"
-              size={size}
-            />
+          title: "Alerts",
+          tabBarIcon: ({ color, size }) => (
+            <NavIconAlerts color={String(color)} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <NavIconProfile color={String(color)} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="more"
+        listeners={{
+          tabPress: (event) => {
+            event.preventDefault();
+          },
+        }}
+        options={{
+          title: "More",
+          tabBarButton: (props) => <MoreTabButton {...props} />,
+          tabBarIcon: ({ color, size }) => (
+            <NavIconMore color={String(color)} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              color={String(color)}
-              focused={focused}
-              name="settings-outline"
-              nameFocused="settings"
-              size={size}
-            />
-          ),
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="my-bets"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="bookmakers"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
@@ -144,18 +144,29 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: "#0A0A0A",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "transparent",
+    borderTopWidth: 0,
     elevation: 0,
     shadowOpacity: 0,
     overflow: "visible",
   },
+  tabBarBackground: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  tabBarTopLine: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: SEPARATOR_THICKNESS,
+    backgroundColor: separatorColor,
+  },
   tabLabel: {
     fontFamily: fonts.sansMedium,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.2,
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0.1,
     marginTop: 2,
     marginBottom: 0,
   },

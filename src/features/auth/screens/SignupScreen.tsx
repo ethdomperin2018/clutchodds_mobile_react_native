@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -22,6 +23,9 @@ import {
   type SignupFormValues,
 } from "@/features/auth/schemas";
 import { fonts } from "@/theme/typography";
+import { separatorLineStyle } from "@/theme/separator";
+
+const googleIcon = require("../../../../assets/images/google-g.png");
 
 type AuthFieldProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -102,9 +106,10 @@ function PasswordCheck({ label, ok }: { label: string; ok: boolean }) {
 }
 
 export function SignupScreen() {
-  const { signup } = useSession();
+  const { signup, signInWithGoogle } = useSession();
   const { height: windowHeight } = useWindowDimensions();
   const [formError, setFormError] = useState<string | null>(null);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const compact = windowHeight < 760;
 
   const {
@@ -139,6 +144,25 @@ export function SignupScreen() {
       );
     }
   });
+
+  const onGooglePress = async () => {
+    setFormError(null);
+    setGoogleSubmitting(true);
+    try {
+      const signedIn = await signInWithGoogle();
+      if (signedIn) {
+        router.replace("/(app)/(tabs)/" as Href);
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in with Google."
+      );
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
@@ -261,7 +285,7 @@ export function SignupScreen() {
                 ) : null}
 
                 <Pressable
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || googleSubmitting}
                   onPress={() => void onSubmit()}
                   style={({ pressed }) => [
                     styles.primaryButton,
@@ -274,11 +298,50 @@ export function SignupScreen() {
                   </Text>
                 </Pressable>
 
+                <View style={styles.dividerRow}>
+                  <View style={[styles.dividerLine, separatorLineStyle]} />
+                  <Text style={styles.dividerText}>or continue with</Text>
+                  <View style={[styles.dividerLine, separatorLineStyle]} />
+                </View>
+
+                <Pressable
+                  disabled={isSubmitting || googleSubmitting}
+                  onPress={() => void onGooglePress()}
+                  style={({ pressed }) => [
+                    styles.googleButton,
+                    pressed ? styles.pressed : null,
+                    googleSubmitting ? styles.disabled : null,
+                  ]}
+                >
+                  <Image
+                    accessibilityLabel="Google"
+                    resizeMode="contain"
+                    source={googleIcon}
+                    style={styles.googleIcon}
+                  />
+                  <Text style={styles.googleButtonText}>
+                    {googleSubmitting ? "Connecting…" : "Google"}
+                  </Text>
+                </Pressable>
+
                 <Text style={styles.legal}>
                   By signing up, you agree to our{" "}
-                  <Text style={styles.legalLink}>Terms of Service</Text>
+                  <Text
+                    accessibilityRole="link"
+                    onPress={() => router.push("/(auth)/terms")}
+                    style={styles.legalLink}
+                  >
+                    Terms of Service
+                  </Text>
                   {"\n"}and{" "}
-                  <Text style={styles.legalLink}>Privacy Policy</Text>.
+                  <Text
+                    accessibilityRole="link"
+                    onPress={() => router.push("/(auth)/privacy")}
+                    style={styles.legalLink}
+                  >
+                    Privacy Policy
+                  </Text>
+                  .
                 </Text>
               </View>
 
@@ -425,6 +488,41 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.55,
   },
+  dividerRow: {
+    marginTop: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+  },
+  dividerText: {
+    fontFamily: fonts.sansRegular,
+    color: "#6B6B73",
+    fontSize: 12,
+  },
+  googleButton: {
+    marginTop: 12,
+    minHeight: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "#0A0A0A",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  googleIcon: {
+    width: 18,
+    height: 18,
+  },
+  googleButtonText: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#FFFFFF",
+    fontSize: 15,
+  },
   legal: {
     marginTop: 12,
     fontFamily: fonts.sansRegular,
@@ -436,6 +534,7 @@ const styles = StyleSheet.create({
   legalLink: {
     color: "#FF1E1E",
     fontFamily: fonts.sansSemiBold,
+    textDecorationLine: "underline",
   },
   footer: {
     marginTop: 32,

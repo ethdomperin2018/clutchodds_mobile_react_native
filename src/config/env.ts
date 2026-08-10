@@ -98,8 +98,17 @@ const configuredApiBaseUrl =
   expoExtra?.apiBaseUrl ??
   getDefaultApiBaseUrl();
 
+/**
+ * Origin used to start Google OAuth in the system browser.
+ * Must match the Next `APP_BASE_URL` / Google redirect URI host.
+ * Defaults to the API base (same Next server).
+ */
+const configuredOauthBaseUrl =
+  process.env.EXPO_PUBLIC_OAUTH_BASE_URL?.trim() || configuredApiBaseUrl;
+
 export const env = {
   apiBaseUrl: rewriteLoopbackForNative(configuredApiBaseUrl),
+  oauthBaseUrl: rewriteLoopbackForNative(configuredOauthBaseUrl),
   appName: "Clutch Odds Mobile",
   uiOnly,
 };
