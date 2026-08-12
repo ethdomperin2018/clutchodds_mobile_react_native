@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, spacing } from "@/theme/tokens";
 
 type AppScreenProps = {
@@ -8,6 +7,7 @@ type AppScreenProps = {
   scrollable?: boolean;
 };
 
+/** Page chrome for signed-in tabs. Top safe area + AppHeader live in tabs layout. */
 export function AppScreen({ children, scrollable = true }: AppScreenProps) {
   const content = scrollable ? (
     <ScrollView
@@ -21,18 +21,14 @@ export function AppScreen({ children, scrollable = true }: AppScreenProps) {
     <View style={[styles.flex, styles.scrollContent]}>{children}</View>
   );
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      {content}
-    </SafeAreaView>
-  );
+  return <View style={styles.root}>{content}</View>;
 }
 
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.background,
   },
