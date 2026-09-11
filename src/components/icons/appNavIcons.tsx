@@ -111,7 +111,7 @@ export function NavIconSettings({ color, size }: NavIconProps) {
   );
 }
 
-/** Heroicons bell — Alerts is mobile-only (not in web APP_NAV). */
+/** Heroicons bell — used for alert lists, not a primary tab. */
 export function NavIconAlerts({ color, size }: NavIconProps) {
   return (
     <NavSvg color={color} size={size}>
@@ -123,12 +123,32 @@ export function NavIconAlerts({ color, size }: NavIconProps) {
   );
 }
 
+/** Model Predictions / AI insights — same paths as web `NavIconBrain`. */
+export function NavIconPrediction({ color, size }: NavIconProps) {
+  return (
+    <NavSvg color={color} size={size}>
+      <StrokePath
+        color={color}
+        d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"
+      />
+      <StrokePath
+        color={color}
+        d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"
+      />
+      <StrokePath
+        color={color}
+        d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"
+      />
+    </NavSvg>
+  );
+}
+
 export function NavIconMore({ color, size }: NavIconProps) {
   return (
     <NavSvg color={color} size={size}>
       <StrokePath
         color={color}
-        d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+        d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
       />
     </NavSvg>
   );

@@ -47,13 +47,13 @@ export function AppHeader() {
           <MaterialCommunityIcons
             color={colors.primary}
             name="crown"
-            size={13}
+            size={12}
           />
         ) : null}
         <Text style={styles.planText} numberOfLines={1}>
           {plan}
         </Text>
-        <Ionicons color={colors.textMuted} name="chevron-down" size={12} />
+        <Ionicons color={colors.textMuted} name="chevron-down" size={11} />
       </Pressable>
 
       <Pressable
@@ -74,29 +74,31 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 14,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 10,
     backgroundColor: colors.background,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   logo: {
-    width: 190,
-    height: 33,
+    width: 156,
+    height: 27,
     flexShrink: 0,
   },
   planPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: 999,
     backgroundColor: colors.primaryMuted,
     borderWidth: 1,
     borderColor: "rgba(255,30,30,0.32)",
     flexShrink: 1,
-    maxWidth: 128,
+    maxWidth: 118,
   },
   planText: {
     fontFamily: fonts.sansSemiBold,
@@ -105,16 +107,16 @@ const styles = StyleSheet.create({
   },
   namePress: {
     flex: 1,
-    minWidth: 56,
+    minWidth: 48,
     alignItems: "flex-end",
     justifyContent: "center",
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   name: {
     fontFamily: fonts.sansSemiBold,
     color: colors.textMuted,
     fontSize: 12,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
     textTransform: "uppercase",
     textAlign: "right",
   },

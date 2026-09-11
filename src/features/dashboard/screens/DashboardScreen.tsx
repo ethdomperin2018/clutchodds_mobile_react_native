@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, type Href } from "expo-router";
 import {
@@ -9,11 +10,12 @@ import {
   Text,
   View,
 } from "react-native";
+import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import {
-  NavIconAlerts,
   NavIconArbitrage,
   NavIconBookmakers,
   NavIconEdgeCenter,
+  NavIconPrediction,
 } from "@/components/icons/appNavIcons";
 import { useSession } from "@/features/auth/SessionProvider";
 import { colors } from "@/theme/tokens";
@@ -24,7 +26,13 @@ const TEAM = {
   tex: require("../../../../assets/images/teams/mlb/tex.png"),
   nyy: require("../../../../assets/images/teams/mlb/nyy.png"),
   pit: require("../../../../assets/images/teams/mlb/pit.png"),
+  bos: require("../../../../assets/images/teams/mlb/bos.png"),
+  lal: require("../../../../assets/images/teams/nba/lal.png"),
+  bosNba: require("../../../../assets/images/teams/nba/bos.png"),
+  edm: require("../../../../assets/images/teams/nhl/edm.png"),
 } as const;
+
+const PORTFOLIO_POINTS = [18, 28, 22, 36, 42, 38, 55, 62, 58, 78];
 
 type TeamLogoProps = {
   source: ImageSourcePropType;
@@ -55,11 +63,140 @@ function TeamLogo({ source, size = 36, lightPlate = false }: TeamLogoProps) {
   );
 }
 
+function PortfolioSparkline({
+  width,
+  height = 56,
+}: {
+  width: number;
+  height?: number;
+}) {
+  if (width <= 0) return null;
+
+  const padX = 4;
+  const padY = 6;
+  const min = Math.min(...PORTFOLIO_POINTS);
+  const max = Math.max(...PORTFOLIO_POINTS);
+  const range = Math.max(max - min, 1);
+  const step = (width - padX * 2) / (PORTFOLIO_POINTS.length - 1);
+
+  const coords = PORTFOLIO_POINTS.map((value, index) => {
+    const x = padX + index * step;
+    const y = padY + (1 - (value - min) / range) * (height - padY * 2);
+    return { x, y };
+  });
+
+  const line = coords
+    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x} ${point.y}`)
+    .join(" ");
+  const area = `${line} L${coords[coords.length - 1]!.x} ${height} L${coords[0]!.x} ${height} Z`;
+
+  return (
+    <Svg height={height} width={width}>
+      <Defs>
+        <LinearGradient id="portfolioFill" x1="0" x2="0" y1="0" y2="1">
+          <Stop offset="0" stopColor={colors.success} stopOpacity="0.35" />
+          <Stop offset="1" stopColor={colors.success} stopOpacity="0.02" />
+        </LinearGradient>
+      </Defs>
+      <Path d={area} fill="url(#portfolioFill)" />
+      <Path
+        d={line}
+        fill="none"
+        stroke={colors.success}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+      />
+      {coords.map((point, index) => (
+        <Circle
+          key={index}
+          cx={point.x}
+          cy={point.y}
+          fill={colors.success}
+          r={3}
+          stroke={colors.surface}
+          strokeWidth={1.5}
+        />
+      ))}
+    </Svg>
+  );
+}
+
+function PortfolioSparklineMeasured() {
+  const [width, setWidth] = useState(0);
+  return (
+    <View
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      style={styles.sparkInner}
+    >
+      <PortfolioSparkline height={52} width={width} />
+    </View>
+  );
+}
+
 function greetingForHour(hour: number) {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
 }
+
+const MOCK_VALUE_BETS = [
+  {
+    id: "1",
+    title: "Lakers -4.5",
+    meta: "NBA vs GSW",
+    edge: "+5.12%",
+    logo: TEAM.lal,
+    lightPlate: true,
+  },
+  {
+    id: "2",
+    title: "Oilers ML",
+    meta: "NHL vs CGY",
+    edge: "+4.32%",
+    logo: TEAM.edm,
+    lightPlate: false,
+  },
+  {
+    id: "3",
+    title: "Over 8.5",
+    meta: "MLB NYY @ BOS",
+    edge: "+3.87%",
+    logo: TEAM.nyy,
+    lightPlate: true,
+  },
+];
+
+/** Ranked by highest pre-game model win probability. */
+const MOCK_PREDICTIONS = [
+  {
+    id: "1",
+    title: "Celtics",
+    meta: "NBA vs MIA",
+    winPct: "68%",
+    marketPct: "Mkt 61%",
+    logo: TEAM.bosNba,
+    lightPlate: true,
+  },
+  {
+    id: "2",
+    title: "Yankees",
+    meta: "MLB @ BOS",
+    winPct: "64%",
+    marketPct: "Mkt 58%",
+    logo: TEAM.nyy,
+    lightPlate: true,
+  },
+  {
+    id: "3",
+    title: "Oilers",
+    meta: "NHL vs CGY",
+    winPct: "61%",
+    marketPct: "Mkt 55%",
+    logo: TEAM.edm,
+    lightPlate: false,
+  },
+];
 
 const MOCK_ALERTS = [
   {
@@ -109,11 +246,11 @@ const QUICK_ACCESS: {
     Icon: NavIconBookmakers,
   },
   {
-    key: "alerts",
-    title: "Alerts",
-    subtitle: "Your notifications",
-    href: "/(app)/(tabs)/alerts",
-    Icon: NavIconAlerts,
+    key: "prediction",
+    title: "Prediction",
+    subtitle: "Model favorites",
+    href: "/(app)/(tabs)/prediction",
+    Icon: NavIconPrediction,
   },
 ];
 
@@ -186,6 +323,112 @@ export function DashboardScreen() {
             </View>
           </View>
         </Pressable>
+
+        <View style={styles.splitRow}>
+          <View style={[styles.splitCard, styles.listCard]}>
+            <View style={styles.splitHeader}>
+              <Text style={styles.splitTitle}>TOP VALUE BETS</Text>
+              <Pressable
+                onPress={() => router.push("/(app)/(tabs)/edge-center")}
+              >
+                <Text style={styles.viewAllSm}>View All</Text>
+              </Pressable>
+            </View>
+
+            {MOCK_VALUE_BETS.map((bet, index) => (
+              <Pressable
+                key={bet.id}
+                onPress={() => router.push("/(app)/(tabs)/edge-center")}
+                style={[
+                  styles.valueRow,
+                  index < MOCK_VALUE_BETS.length - 1
+                    ? styles.valueRowBorder
+                    : null,
+                ]}
+              >
+                <TeamLogo
+                  lightPlate={bet.lightPlate}
+                  size={26}
+                  source={bet.logo}
+                />
+                <View style={styles.valueCopy}>
+                  <Text style={styles.valueTitle} numberOfLines={1}>
+                    {bet.title}
+                  </Text>
+                  <Text style={styles.valueMeta} numberOfLines={1}>
+                    {bet.meta}
+                  </Text>
+                </View>
+                <Text style={styles.valueEdge}>{bet.edge}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View style={[styles.splitCard, styles.listCard]}>
+            <View style={styles.splitHeader}>
+              <Text style={styles.splitTitle}>TOP PREDICTIONS</Text>
+              <Pressable
+                onPress={() => router.push("/(app)/(tabs)/edge-center")}
+              >
+                <Text style={styles.viewAllSm}>View All</Text>
+              </Pressable>
+            </View>
+
+            {MOCK_PREDICTIONS.map((pick, index) => (
+              <Pressable
+                key={pick.id}
+                onPress={() => router.push("/(app)/(tabs)/edge-center")}
+                style={[
+                  styles.valueRow,
+                  index < MOCK_PREDICTIONS.length - 1
+                    ? styles.valueRowBorder
+                    : null,
+                ]}
+              >
+                <TeamLogo
+                  lightPlate={pick.lightPlate}
+                  size={26}
+                  source={pick.logo}
+                />
+                <View style={styles.valueCopy}>
+                  <Text style={styles.valueTitle} numberOfLines={1}>
+                    {pick.title}
+                  </Text>
+                  <Text style={styles.valueMeta} numberOfLines={1}>
+                    {pick.meta}
+                  </Text>
+                </View>
+                <View style={styles.predRight}>
+                  <Text style={styles.predWin}>{pick.winPct}</Text>
+                  <Text style={styles.predMarket}>{pick.marketPct}</Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View style={[styles.splitCard, styles.portfolioCard]}>
+          <Text style={styles.splitTitle}>PORTFOLIO SUMMARY</Text>
+          <View style={styles.portfolioBody}>
+            <View style={styles.portfolioMain}>
+              <Text style={styles.portfolioLabel}>{"Today's P/L"}</Text>
+              <Text style={styles.portfolioPnL}>+$166.93</Text>
+              <View style={styles.portfolioStats}>
+                <View style={styles.portfolioStat}>
+                  <Text style={styles.portfolioLabelTight}>Win Rate</Text>
+                  <Text style={styles.portfolioStatValue}>65%</Text>
+                </View>
+                <View style={styles.portfolioStat}>
+                  <Text style={styles.portfolioLabelTight}>Bets</Text>
+                  <Text style={styles.portfolioStatValue}>20</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.sparkWrapWide}>
+              <PortfolioSparklineMeasured />
+            </View>
+          </View>
+        </View>
 
         <View style={styles.sectionRow}>
           <Text style={styles.sectionEyebrowInline}>RECENT ALERTS</Text>
@@ -403,7 +646,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   arbCard: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   pairCard: {
     backgroundColor: colors.surface,
@@ -457,6 +700,141 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  splitRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+  splitCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    minWidth: 0,
+  },
+  listCard: {
+    paddingBottom: 4,
+  },
+  portfolioCard: {
+    marginBottom: 16,
+    flex: undefined,
+  },
+  portfolioBody: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 12,
+    marginTop: 4,
+  },
+  portfolioMain: {
+    flex: 1,
+    minWidth: 0,
+  },
+  splitHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+    marginBottom: 6,
+  },
+  splitTitle: {
+    fontFamily: fonts.sansSemiBold,
+    color: colors.text,
+    fontSize: 10,
+    letterSpacing: 0.6,
+  },
+  viewAllSm: {
+    fontFamily: fonts.sansSemiBold,
+    color: colors.primary,
+    fontSize: 11,
+  },
+  valueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 9,
+  },
+  valueRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  valueCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  valueTitle: {
+    fontFamily: fonts.sansSemiBold,
+    color: colors.text,
+    fontSize: 12,
+  },
+  valueMeta: {
+    fontFamily: fonts.sansRegular,
+    color: colors.textMuted,
+    fontSize: 10,
+  },
+  valueEdge: {
+    fontFamily: fonts.sansBold,
+    color: colors.success,
+    fontSize: 12,
+  },
+  predRight: {
+    alignItems: "flex-end",
+    gap: 1,
+  },
+  predWin: {
+    fontFamily: fonts.sansBold,
+    color: colors.text,
+    fontSize: 13,
+  },
+  predMarket: {
+    fontFamily: fonts.sansRegular,
+    color: colors.textMuted,
+    fontSize: 9,
+  },
+  portfolioLabel: {
+    fontFamily: fonts.sansRegular,
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 4,
+  },
+  portfolioLabelTight: {
+    fontFamily: fonts.sansRegular,
+    color: colors.textMuted,
+    fontSize: 11,
+  },
+  portfolioPnL: {
+    fontFamily: fonts.sansBold,
+    color: colors.success,
+    fontSize: 22,
+    lineHeight: 26,
+    letterSpacing: -0.3,
+    marginTop: 2,
+  },
+  portfolioStats: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 10,
+  },
+  portfolioStat: {
+    flex: 1,
+    gap: 2,
+  },
+  portfolioStatValue: {
+    fontFamily: fonts.sansBold,
+    color: colors.text,
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  sparkWrapWide: {
+    width: "46%",
+    maxWidth: 160,
+  },
+  sparkInner: {
+    width: "100%",
+    height: 52,
   },
   sectionRow: {
     flexDirection: "row",

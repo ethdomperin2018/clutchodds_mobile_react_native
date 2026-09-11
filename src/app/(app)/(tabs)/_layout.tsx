@@ -5,11 +5,11 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import {
-  NavIconAlerts,
   NavIconArbitrage,
   NavIconDashboard,
   NavIconEdgeCenter,
   NavIconMore,
+  NavIconPrediction,
 } from "@/components/icons/appNavIcons";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MoreTabButton } from "@/features/more/MoreTabButton";
@@ -91,11 +91,11 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="alerts"
+            name="prediction"
             options={{
-              title: "Alerts",
+              title: "Prediction",
               tabBarIcon: ({ color, size }) => (
-                <NavIconAlerts color={String(color)} size={size} />
+                <NavIconPrediction color={String(color)} size={size} />
               ),
             }}
           />
@@ -140,6 +140,12 @@ export default function TabsLayout() {
           />
           <Tabs.Screen
             name="bookmakers"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="alerts"
             options={{
               href: null,
             }}

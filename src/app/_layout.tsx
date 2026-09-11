@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { AppProviders } from "@/providers/AppProviders";
 import { useAppFonts } from "@/theme/useAppFonts";
 
@@ -12,7 +13,7 @@ export default function RootLayout() {
   const { loaded } = useAppFonts();
 
   if (!loaded) {
-    return null;
+    return <LoadingScreen />;
   }
 
   return (

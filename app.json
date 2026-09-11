@@ -6,6 +6,11 @@
     "orientation": "portrait",
     "scheme": "clutchodds",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/logo-tight.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -16,7 +21,15 @@
       "expo-router",
       "expo-secure-store",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/images/logo-tight.jpg",
+          "imageWidth": 220
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
