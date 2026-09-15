@@ -7,9 +7,9 @@ import {
 import {
   NavIconArbitrage,
   NavIconDashboard,
-  NavIconEdgeCenter,
   NavIconMore,
   NavIconPrediction,
+  NavIconValueBets,
 } from "@/components/icons/appNavIcons";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MoreTabButton } from "@/features/more/MoreTabButton";
@@ -73,11 +73,11 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="edge-center"
+            name="value-bets"
             options={{
-              title: "Edge Center",
+              title: "Value Bets",
               tabBarIcon: ({ color, size }) => (
-                <NavIconEdgeCenter color={String(color)} size={size} />
+                <NavIconValueBets color={String(color)} size={size} />
               ),
             }}
           />

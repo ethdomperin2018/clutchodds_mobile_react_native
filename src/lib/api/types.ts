@@ -23,23 +23,57 @@ export type SignupResponse =
 
 export type OddsSnapshotResponse = {
   fetchedAt: string;
-  arbitrageCount: number;
-  lineShopCount: number;
-  topArbitrageOpportunities: Array<{
-    id: string;
-    matchup: string;
-    sportLabel: string;
-    edgePercent: number;
-    expectedProfit: number;
-  }>;
+  liveArbCount: number;
+  upcomingArbCount: number;
+  lineShopPickCount: number;
+  lineShopTeasers: PublicLineShopTeaser[];
+  arbitrageOpportunities: PublicArbTeaser[];
+  bestArbitrageOpportunities: PublicArbTeaser[];
+  snapshot?: true;
+  error?: string;
+  errorCode?: string;
+  errorTitle?: string;
+};
+
+export type PublicArbTeaser = {
+  eventId: string;
+  matchup: string;
+  sportKey: string;
+  sportTitle: string;
+  homeTeam: string;
+  awayTeam: string;
+  commenceTime: string;
+  totalStake: number;
+  guaranteedProfit: number;
+};
+
+export type PublicLineShopTeaser = {
+  eventId: string;
+  matchup: string;
+  sportKey: string;
+  sportTitle: string;
+  homeTeam: string;
+  awayTeam: string;
+  teamName: string;
+  edgePercent: number;
+  commenceTime: string;
+  american: number;
+  evPercent: number;
+  confidenceScore: number;
+};
+
+export type ManualBetRow = {
+  id: string;
+  expectedProfit: number | null;
+  result: "pending" | "won" | "lost" | "push" | "partial";
+  createdAt: string;
+  notes: string | null;
+  sportKey?: string | null;
+  matchup?: string;
+  legA: { bookTitle: string; stake: number; american: number };
+  legB: { bookTitle: string; stake: number; american: number };
 };
 
 export type BetsResponse = {
-  bets: Array<{
-    id: string;
-    matchup: string;
-    sportKey: string | null;
-    betDate: string | null;
-    expectedProfit: number | null;
-  }>;
+  bets: ManualBetRow[];
 };

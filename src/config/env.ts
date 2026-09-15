@@ -106,9 +106,19 @@ const configuredApiBaseUrl =
 const configuredOauthBaseUrl =
   process.env.EXPO_PUBLIC_OAUTH_BASE_URL?.trim() || configuredApiBaseUrl;
 
+/** Public marketing site that hosts /terms and /privacy (same as web LEGAL_PAGES). */
+const DEFAULT_WEB_BASE_URL = "https://www.clutchodds.com";
+const configuredWebBaseUrl =
+  process.env.EXPO_PUBLIC_WEB_BASE_URL?.trim() || DEFAULT_WEB_BASE_URL;
+const webBaseUrl = rewriteLoopbackForNative(configuredWebBaseUrl);
+
 export const env = {
   apiBaseUrl: rewriteLoopbackForNative(configuredApiBaseUrl),
   oauthBaseUrl: rewriteLoopbackForNative(configuredOauthBaseUrl),
+  webBaseUrl,
+  /** Canonical web legal pages — do not duplicate copy in the app. */
+  termsUrl: `${webBaseUrl}/terms`,
+  privacyUrl: `${webBaseUrl}/privacy`,
   appName: "Clutch Odds Mobile",
   uiOnly,
 };

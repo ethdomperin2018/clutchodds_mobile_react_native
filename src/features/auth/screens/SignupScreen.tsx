@@ -22,6 +22,10 @@ import {
   signupSchema,
   type SignupFormValues,
 } from "@/features/auth/schemas";
+import {
+  openPrivacyPolicy,
+  openTermsOfService,
+} from "@/features/legal/openLegalDocument";
 import { fonts } from "@/theme/typography";
 import { separatorLineStyle } from "@/theme/separator";
 
@@ -328,7 +332,9 @@ export function SignupScreen() {
                   By signing up, you agree to our{" "}
                   <Text
                     accessibilityRole="link"
-                    onPress={() => router.push("/(auth)/terms")}
+                    onPress={() => {
+                      void openTermsOfService();
+                    }}
                     style={styles.legalLink}
                   >
                     Terms of Service
@@ -336,7 +342,9 @@ export function SignupScreen() {
                   {"\n"}and{" "}
                   <Text
                     accessibilityRole="link"
-                    onPress={() => router.push("/(auth)/privacy")}
+                    onPress={() => {
+                      void openPrivacyPolicy();
+                    }}
                     style={styles.legalLink}
                   >
                     Privacy Policy

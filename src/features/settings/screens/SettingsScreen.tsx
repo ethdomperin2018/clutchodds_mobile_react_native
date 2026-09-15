@@ -1,14 +1,16 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "@/components/layout/AppScreen";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useSession } from "@/features/auth/SessionProvider";
-import { colors, spacing } from "@/theme/tokens";
+import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
+import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts, typography } from "@/theme/typography";
 
 export function SettingsScreen() {
   const { logout, user } = useSession();
+  const { replayTour } = useOnboarding();
 
   const handleLogout = async () => {
     await logout();
@@ -41,6 +43,23 @@ export function SettingsScreen() {
           variant="ghost"
         />
       </SectionCard>
+
+      {user ? (
+        <SectionCard
+          title="Product tour"
+          description="Replay the 5-step intro covering expected value, Arbitrage, Value Bets, and Model Predictions."
+        >
+          <Pressable
+            onPress={() => void replayTour()}
+            style={({ pressed }) => [
+              styles.replayBtn,
+              pressed ? styles.pressed : null,
+            ]}
+          >
+            <Text style={styles.replayText}>Replay tour</Text>
+          </Pressable>
+        </SectionCard>
+      ) : null}
     </AppScreen>
   );
 }
@@ -65,5 +84,23 @@ const styles = StyleSheet.create({
   value: {
     color: colors.text,
     fontFamily: fonts.sansBold,
+  },
+  replayBtn: {
+    alignSelf: "flex-start",
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  replayText: {
+    fontFamily: fonts.sansBold,
+    color: "#D4D4D8",
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

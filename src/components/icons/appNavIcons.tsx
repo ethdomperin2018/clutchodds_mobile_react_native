@@ -42,7 +42,7 @@ export function NavIconDashboard({ color, size }: NavIconProps) {
   );
 }
 
-export function NavIconEdgeCenter({ color, size }: NavIconProps) {
+export function NavIconValueBets({ color, size }: NavIconProps) {
   return (
     <NavSvg color={color} size={size}>
       <StrokePath
