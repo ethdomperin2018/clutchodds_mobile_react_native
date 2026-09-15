@@ -214,7 +214,11 @@ function OppEdgeList({
             <AnimatedNumber
               format="signed-percent-2"
               resetKey={resetKey}
-              style={styles.oppMetricGreen}
+              style={
+                (pick.evPercent ?? pick.edgePercent) >= 0
+                  ? styles.oppMetricGreen
+                  : styles.oppMetricRed
+              }
               value={pick.evPercent ?? pick.edgePercent}
             />
           </View>
@@ -270,7 +274,11 @@ function OppArbList({
             <AnimatedNumber
               format="percent-2"
               resetKey={resetKey}
-              style={styles.oppMetricGreen}
+              style={
+                arbRoiPercent(arb) >= 0
+                  ? styles.oppMetricGreen
+                  : styles.oppMetricRed
+              }
               value={arbRoiPercent(arb)}
             />
           </View>
@@ -333,10 +341,22 @@ function OppPredictionList({
               <AnimatedNumber
                 format="decimal-1"
                 resetKey={resetKey}
-                style={styles.oppMetricWhite}
+                style={
+                  row.winProb >= 50
+                    ? styles.oppMetricGreen
+                    : styles.oppMetricRed
+                }
                 value={row.winProb}
               />
-              <Text style={styles.oppMetricWhite}>%</Text>
+              <Text
+                style={
+                  row.winProb >= 50
+                    ? styles.oppMetricGreen
+                    : styles.oppMetricRed
+                }
+              >
+                %
+              </Text>
             </View>
           </View>
         </View>
@@ -1318,10 +1338,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontVariant: ["tabular-nums"],
   },
-  oppMetricWhite: {
+  oppMetricRed: {
     fontFamily: fonts.displayBold,
-    color: colors.text,
+    color: "#F87171",
     fontSize: 14,
+    marginTop: 2,
     fontVariant: ["tabular-nums"],
   },
   predictionLocked: {
