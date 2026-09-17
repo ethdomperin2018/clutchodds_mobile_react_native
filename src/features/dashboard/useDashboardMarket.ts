@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { oddsApi } from "@/lib/api/endpoints/odds";
+import { ApiError } from "@/lib/api/client";
 import type {
   PublicArbTeaser,
   PublicLineShopTeaser,
 } from "@/lib/api/types";
+import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
 import {
   buildDashboardMarketFromOdds,
   DASHBOARD_LINE_SHOP_LIMIT,
@@ -20,6 +22,7 @@ import {
 } from "@/lib/predictions/rows";
 import { isEligibleSportPredictionWindow } from "@/lib/predictions/window";
 import { usePollingQuery } from "@/lib/query/use-polling-query";
+import type { AuthUser } from "@/types/auth";
 
 const REFRESH_MS = 30_000;
 
@@ -41,13 +44,31 @@ function uniqueEligiblePredictionPicks(picks: LineShopPick[], now: Date) {
   );
 }
 
+async function fetchLightFeedWithAuthRefresh(
+  totalStake: number,
+  minEdge: number,
+  refresh?: () => Promise<AuthUser | null>
+) {
+  try {
+    return await oddsApi.getLightFeed(totalStake, minEdge);
+  } catch (error) {
+    if (refresh && (await refreshAuthIfProDenied(error, refresh))) {
+      throw error instanceof ApiError
+        ? error
+        : new Error("Pro subscription required.");
+    }
+    throw error;
+  }
+}
+
 export function useDashboardMarket(options: {
   ready: boolean;
   pro: boolean;
   elite: boolean;
   userId: string | null;
+  refresh?: () => Promise<AuthUser | null>;
 }) {
-  const { ready, pro, elite, userId } = options;
+  const { ready, pro, elite, userId, refresh } = options;
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [predictions, setPredictions] = useState<
     Record<string, SportPredictionLookupResult | null>
@@ -68,7 +89,7 @@ export function useDashboardMarket(options: {
 
   const lightQuery = usePollingQuery({
     queryKey: ["odds", "light", "dashboard"],
-    queryFn: () => oddsApi.getLightFeed(1000, 0),
+    queryFn: () => fetchLightFeedWithAuthRefresh(1000, 0, refresh),
     pollMs: REFRESH_MS,
     enabled: ready && pro,
   });
@@ -147,6 +168,7 @@ export function useDashboardMarket(options: {
       try {
         const next = await fetchEnginePredictionsWithCache(predictionItems, {
           userId,
+          refresh,
           onCached: (cached) => {
             if (!cancelled) {
               setPredictions(cached);
@@ -169,7 +191,7 @@ export function useDashboardMarket(options: {
     };
     // predictionItemsKey captures identity without re-running every nowMs tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elite, pro, userId, predictionItemsKey, rawPicks.length]);
+  }, [elite, pro, userId, predictionItemsKey, rawPicks.length, refresh]);
 
   const allPredictionRows: DashboardPredictionRow[] = useMemo(() => {
     if (!elite || !pro) return [];

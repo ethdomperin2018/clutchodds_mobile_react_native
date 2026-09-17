@@ -93,7 +93,7 @@ export default function TabsLayout() {
           <Tabs.Screen
             name="prediction"
             options={{
-              title: "Prediction",
+              title: "Predictions",
               tabBarIcon: ({ color, size }) => (
                 <NavIconPrediction color={String(color)} size={size} />
               ),

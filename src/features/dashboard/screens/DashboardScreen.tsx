@@ -21,6 +21,7 @@ import { PnlTrendLineChart, PNL_CHART_DEFAULT_HEIGHT } from "@/components/charts
 import { TeamLogo, TeamLogoPair } from "@/components/TeamLogo";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { OddsApiErrorBanner } from "@/components/ui/OddsApiErrorBanner";
+import { AccountInactiveNotice } from "@/features/auth/AccountInactiveNotice";
 import { useSession } from "@/features/auth/SessionProvider";
 import { useDashboardMarket } from "@/features/dashboard/useDashboardMarket";
 import { betsApi } from "@/lib/api/endpoints/bets";
@@ -29,6 +30,7 @@ import type {
   PublicArbTeaser,
   PublicLineShopTeaser,
 } from "@/lib/api/types";
+import { isAccountActive } from "@/lib/accountStatus";
 import { effectiveExpectedProfit, realizedProfitForBet } from "@/lib/betProfit";
 import {
   arbRoiPercent,
@@ -584,9 +586,10 @@ function SportSelect({
 }
 
 export function DashboardScreen() {
-  const { user, ready } = useSession();
-  const pro = isProUser(user);
-  const elite = isEliteUser(user);
+  const { user, ready, refresh } = useSession();
+  const accountActive = user ? isAccountActive(user.accountStatus) : true;
+  const pro = accountActive && isProUser(user);
+  const elite = accountActive && isEliteUser(user);
   const [oppTab, setOppTab] = useState<OppTab>("edge");
   const [perfSport, setPerfSport] = useState<string>("all");
   const [bets, setBets] = useState<ManualBetRow[]>([]);
@@ -604,10 +607,11 @@ export function DashboardScreen() {
     predictionsLoading,
     modelPredictionCount,
   } = useDashboardMarket({
-    ready,
+    ready: ready && accountActive,
     pro,
     elite,
     userId: user?.id ?? null,
+    refresh,
   });
 
   useEffect(() => {
@@ -716,6 +720,28 @@ export function DashboardScreen() {
             label: "View all picks →",
             onPress: () => router.push("/(app)/(tabs)/value-bets"),
           };
+
+  if (!accountActive) {
+    return (
+      <View style={styles.safe}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerRow}>
+            <View style={styles.headerCopy}>
+              <Text style={styles.pageTitle}>Dashboard</Text>
+              <Text style={styles.subtitle}>
+                Live market intelligence. Find the best edges, arbs, and
+                insights.
+              </Text>
+            </View>
+          </View>
+          <AccountInactiveNotice />
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.safe}>

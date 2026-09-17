@@ -83,6 +83,10 @@ const expoExtra = Constants.expoConfig?.extra as
   | {
       apiBaseUrl?: string;
       uiOnly?: boolean;
+      proPriceAmount?: string;
+      elitePriceAmount?: string;
+      proAnnualPriceAmount?: string;
+      eliteAnnualPriceAmount?: string;
     }
   | undefined;
 
@@ -112,6 +116,22 @@ const configuredWebBaseUrl =
   process.env.EXPO_PUBLIC_WEB_BASE_URL?.trim() || DEFAULT_WEB_BASE_URL;
 const webBaseUrl = rewriteLoopbackForNative(configuredWebBaseUrl);
 
+function priceAmount(
+  envKey: string,
+  extraKey:
+    | "proPriceAmount"
+    | "elitePriceAmount"
+    | "proAnnualPriceAmount"
+    | "eliteAnnualPriceAmount",
+  fallback: string
+) {
+  return (
+    process.env[envKey]?.trim() ||
+    expoExtra?.[extraKey]?.trim() ||
+    fallback
+  );
+}
+
 export const env = {
   apiBaseUrl: rewriteLoopbackForNative(configuredApiBaseUrl),
   oauthBaseUrl: rewriteLoopbackForNative(configuredOauthBaseUrl),
@@ -121,4 +141,24 @@ export const env = {
   privacyUrl: `${webBaseUrl}/privacy`,
   appName: "Clutch Odds Mobile",
   uiOnly,
+  proPriceAmount: priceAmount(
+    "EXPO_PUBLIC_PRO_PRICE_AMOUNT",
+    "proPriceAmount",
+    "29"
+  ),
+  elitePriceAmount: priceAmount(
+    "EXPO_PUBLIC_ELITE_PRICE_AMOUNT",
+    "elitePriceAmount",
+    "99"
+  ),
+  proAnnualPriceAmount: priceAmount(
+    "EXPO_PUBLIC_PRO_ANNUAL_PRICE_AMOUNT",
+    "proAnnualPriceAmount",
+    "290"
+  ),
+  eliteAnnualPriceAmount: priceAmount(
+    "EXPO_PUBLIC_ELITE_ANNUAL_PRICE_AMOUNT",
+    "eliteAnnualPriceAmount",
+    "990"
+  ),
 };

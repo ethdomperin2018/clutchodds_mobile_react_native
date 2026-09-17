@@ -32,6 +32,15 @@ export function compareModelPredictionRowsByTop(
   return b.modelEdge - a.modelEdge;
 }
 
+export function pickTopModelPredictionRow(
+  rows: ModelPredictionRow[]
+): ModelPredictionRow | null {
+  if (rows.length === 0) return null;
+  return rows.reduce((best, row) =>
+    compareModelPredictionRowsByTop(row, best) < 0 ? row : best
+  );
+}
+
 export function groupEnginePicksByEvent(
   picks: LineShopPick[]
 ): Map<string, LineShopPick[]> {

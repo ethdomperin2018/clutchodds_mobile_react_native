@@ -20,6 +20,20 @@ export function displayConfidenceScore(value: number): number {
   return Number(clamped.toFixed(1));
 }
 
+/** True when displayed confidence meets a minimum threshold (≥). */
+export function meetsMinConfidence(score: number, min: number): boolean {
+  if (min <= 0) return true;
+  return displayConfidenceScore(score) >= min;
+}
+
+/** Model / value edge filter: All, 0% (+ only), or ≥ N%. */
+export function meetsModelEdgeMin(edge: number, min: string): boolean {
+  if (min === "all") return true;
+  const threshold = Number(min);
+  if (threshold === 0) return displayPercent2(edge) >= 0;
+  return meetsMinPercent2(edge, threshold);
+}
+
 export function computeDisplayModelEdge(
   modelWinProbability: number,
   marketImpliedProbability: number

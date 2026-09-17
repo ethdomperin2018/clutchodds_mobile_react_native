@@ -1,3 +1,5 @@
+import { ApiError } from "@/lib/api/client";
+import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
 import { predictionsApi } from "@/lib/api/endpoints/predictions";
 import {
   loadEnginePredictionCache,
@@ -9,9 +11,12 @@ import type {
   EnginePredictionFetchItem,
   SportPredictionLookupResult,
 } from "@/lib/predictions/rows";
+import type { AuthUser } from "@/types/auth";
 
 export type FetchEnginePredictionsOptions = {
   userId: string | null;
+  /** Same as web: refresh session when Elite API returns 402. */
+  refresh?: () => Promise<AuthUser | null>;
   /** Called when cached hits are available (before network). */
   onCached?: (
     cached: Record<string, SportPredictionLookupResult | null>
@@ -38,10 +43,27 @@ export async function fetchEnginePredictionsWithCache(
     return cached;
   }
 
-  const response = await predictionsApi.fetchBatch(missingItems);
-  const fresh = response.predictions ?? {};
-  const mergedCache = mergePredictionItemsIntoCache(cache, missingItems, fresh);
-  await saveEnginePredictionCache(options.userId, mergedCache);
-
-  return { ...cached, ...fresh };
+  try {
+    const response = await predictionsApi.fetchBatch(missingItems);
+    const fresh = response.predictions ?? {};
+    const mergedCache = mergePredictionItemsIntoCache(
+      cache,
+      missingItems,
+      fresh
+    );
+    await saveEnginePredictionCache(options.userId, mergedCache);
+    return { ...cached, ...fresh };
+  } catch (error) {
+    if (
+      options.refresh &&
+      (await refreshAuthIfProDenied(error, options.refresh))
+    ) {
+      throw new Error(
+        error instanceof ApiError
+          ? error.message
+          : "Elite subscription required to load model predictions."
+      );
+    }
+    throw error;
+  }
 }

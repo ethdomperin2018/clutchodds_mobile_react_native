@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
+import { useSession } from "@/features/auth/SessionProvider";
+import { ApiError } from "@/lib/api/client";
 import { betsApi } from "@/lib/api/endpoints/bets";
 import { oddsApi } from "@/lib/api/endpoints/odds";
+import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
 import { queryClient } from "@/lib/query/query-client";
 import { parseArbEventIdFromNotes } from "@/lib/arbBetNotes";
 import {
@@ -97,6 +100,7 @@ function sortArbs(list: ArbitrageOpportunity[], arbSort: ArbSort) {
 }
 
 export function useArbitrageBoard() {
+  const { refresh } = useSession();
   const [totalStake, setTotalStake] = useState("1000");
   const [data, setData] = useState<OddsLightFeedResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -226,13 +230,14 @@ export function useArbitrageBoard() {
       );
       setLastUpdatedAt(Date.now());
     } catch (e) {
+      if (await refreshAuthIfProDenied(e, refresh)) return;
       const message = e instanceof Error ? e.message : "Failed to load odds";
       const code = e instanceof ApiError ? e.code : undefined;
       setData({ error: message, errorCode: code });
     } finally {
       setLoading(false);
     }
-  }, [stakeNum]);
+  }, [stakeNum, refresh]);
 
   useEffect(() => {
     void load({ light: true });

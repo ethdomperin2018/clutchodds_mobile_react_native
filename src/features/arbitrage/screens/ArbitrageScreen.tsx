@@ -23,7 +23,9 @@ import {
   useArbitrageBoard,
   type ArbSort,
 } from "@/features/arbitrage/useArbitrageBoard";
+import { AccountInactiveNotice } from "@/features/auth/AccountInactiveNotice";
 import { useSession } from "@/features/auth/SessionProvider";
+import { isAccountActive } from "@/lib/accountStatus";
 import {
   TRACKED_BOOKMAKER_COUNT,
   TRACKED_BOOKMAKER_KEYS,
@@ -45,6 +47,7 @@ import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
 export function ArbitrageScreen() {
   const { user, ready } = useSession();
+  const accountActive = user ? isAccountActive(user.accountStatus) : true;
   const pro = isProUser(user);
 
   if (!ready) {
@@ -53,6 +56,18 @@ export function ArbitrageScreen() {
         <ActivityIndicator color={colors.success} />
         <Text style={styles.loadingCopy}>Loading…</Text>
       </View>
+    );
+  }
+
+  if (!accountActive) {
+    return (
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <Header filterCount={0} onOpenFilters={() => undefined} />
+        <AccountInactiveNotice />
+      </ScrollView>
     );
   }
 
