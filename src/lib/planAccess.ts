@@ -1,7 +1,7 @@
 import type { AuthUser } from "@/types/auth";
 
 function hasPaidAccessStatus(status: AuthUser["subscriptionStatus"]) {
-  return status === "active" || status === "trialing";
+  return status === "active" || status === "trialing" || status === "past_due";
 }
 
 function isPaidPlan(plan: AuthUser["plan"]) {

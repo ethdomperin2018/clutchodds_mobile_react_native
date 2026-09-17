@@ -3,7 +3,7 @@ import { AppScreen } from "@/components/layout/AppScreen";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { betsApi } from "@/lib/api/endpoints/bets";
-import { colors, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
 import { fonts, typography } from "@/theme/typography";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -44,16 +44,14 @@ export function MyBetsScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.sm,
+    gap: 6,
   },
   title: {
     ...typography.pageTitle,
-    color: colors.text,
+    color: "#FFFFFF",
   },
   subtitle: {
-    ...typography.bodyMuted,
-    color: colors.textMuted,
-    fontSize: 15,
+    ...typography.pageSubtitle,
   },
   row: {
     ...typography.bodyMuted,

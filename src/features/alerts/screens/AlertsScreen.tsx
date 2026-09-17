@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "@/components/layout/AppScreen";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { colors, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
 import { typography } from "@/theme/typography";
 
 export function AlertsScreen() {
@@ -28,16 +28,14 @@ export function AlertsScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.sm,
+    gap: 6,
   },
   title: {
     ...typography.pageTitle,
-    color: colors.text,
+    color: "#FFFFFF",
   },
   subtitle: {
-    ...typography.bodyMuted,
-    color: colors.textMuted,
-    fontSize: 15,
+    ...typography.pageSubtitle,
   },
   body: {
     ...typography.bodyMuted,

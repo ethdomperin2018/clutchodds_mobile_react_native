@@ -5,7 +5,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useSession } from "@/features/auth/SessionProvider";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { colors, radii } from "@/theme/tokens";
 import { fonts, typography } from "@/theme/typography";
 
 export function SettingsScreen() {
@@ -66,16 +66,14 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.sm,
+    gap: 6,
   },
   title: {
     ...typography.pageTitle,
-    color: colors.text,
+    color: "#FFFFFF",
   },
   subtitle: {
-    ...typography.bodyMuted,
-    color: colors.textMuted,
-    fontSize: 15,
+    ...typography.pageSubtitle,
   },
   row: {
     ...typography.bodyMuted,

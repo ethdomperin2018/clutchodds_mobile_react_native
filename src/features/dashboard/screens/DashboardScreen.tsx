@@ -40,7 +40,7 @@ import { isEliteUser, isProUser } from "@/lib/planAccess";
 import type { DashboardPredictionRow } from "@/lib/predictions/rows";
 import { awayAtHomeLabel, shortTeamName } from "@/lib/teamDisplay";
 import { colors } from "@/theme/tokens";
-import { fonts } from "@/theme/typography";
+import { fonts, typography } from "@/theme/typography";
 
 const HOW_STEPS = [
   "We scan thousands of lines across books",
@@ -941,13 +941,6 @@ export function DashboardScreen() {
             href={"/(app)/(tabs)/prediction" as Href}
             iconBg="rgba(139,92,246,0.15)"
             iconColor="#C4B5FD"
-            onPress={
-              user
-                ? undefined
-                : () => {
-                    void openPricing("/model-predictions");
-                  }
-            }
             title="Model Predictions"
           />
         </View>
@@ -1044,27 +1037,21 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 36,
+    paddingBottom: 24,
     gap: 16,
   },
   headerRow: {
     gap: 12,
   },
   headerCopy: {
-    gap: 8,
+    gap: 6,
   },
   pageTitle: {
-    fontFamily: fonts.displayBold,
-    color: colors.text,
-    fontSize: 32,
-    lineHeight: 34,
-    letterSpacing: -0.5,
+    ...typography.pageTitle,
+    color: "#FFFFFF",
   },
   subtitle: {
-    fontFamily: fonts.sansRegular,
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...typography.pageSubtitle,
   },
   statusRow: {
     flexDirection: "row",

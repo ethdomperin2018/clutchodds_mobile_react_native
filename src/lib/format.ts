@@ -6,6 +6,11 @@ export function formatSignedPercent(value: number, digits = 2): string {
   return `${abs}%`;
 }
 
+export function formatAmerican(american: number): string {
+  if (american > 0) return `+${american}`;
+  return String(american);
+}
+
 export function formatPercent(value: number, digits = 2): string {
   const n = Number.isFinite(value) ? value : 0;
   return `${n.toFixed(digits)}%`;

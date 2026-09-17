@@ -92,10 +92,25 @@ export type PublicLineShopTeaser = Pick<
   confidenceScore: number;
 };
 
+export type GameLineSummary = {
+  eventId: string;
+  sportKey: string;
+  sportTitle: string;
+  commenceTime: string;
+  matchup: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeBestLine: BookLine | null;
+  awayBestLine: BookLine | null;
+  impliedProbabilitySum: number;
+  isArbitrage: boolean;
+};
+
 export type OddsLightFeedResponse = {
   fetchedAt?: string;
   lineShopPicks?: LineShopPick[];
   arbitrageOpportunities?: ArbitrageOpportunity[];
+  games?: GameLineSummary[];
   error?: string;
   errorCode?: string;
   errorTitle?: string;

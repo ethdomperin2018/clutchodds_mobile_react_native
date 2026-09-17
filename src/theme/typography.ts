@@ -63,9 +63,17 @@ export const typography = {
     lineHeight: 32,
   },
   pageTitle: {
-    fontFamily: fonts.displayBold,
-    fontSize: 30,
-    lineHeight: 34,
+    fontFamily: fonts.displaySemiBold,
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: -0.6,
+  },
+  /** Web `AppPageHeader` description: text-sm leading-relaxed text-zinc-400. */
+  pageSubtitle: {
+    fontFamily: fonts.sansRegular,
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#A1A1AA",
   },
   heroTitle: {
     fontFamily: fonts.displayBold,

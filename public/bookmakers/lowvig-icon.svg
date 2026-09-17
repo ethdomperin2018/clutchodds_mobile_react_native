@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect x="1" y="1" width="62" height="62" fill="#0B1628" stroke="#FFFFFF" stroke-width="2" />
+  <text
+    x="32"
+    y="34"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="#FFFFFF"
+    font-family="'Arial Black', Arial, Helvetica, sans-serif"
+    font-weight="900"
+    font-size="44"
+    letter-spacing="-2"
+  >LV</text>
+</svg>

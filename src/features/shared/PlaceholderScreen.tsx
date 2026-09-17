@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "@/components/layout/AppScreen";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { colors, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
 import { fonts, typography } from "@/theme/typography";
 
 type PlaceholderScreenProps = {
@@ -42,16 +42,14 @@ export function PlaceholderScreen({
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.sm,
+    gap: 6,
   },
   title: {
     ...typography.pageTitle,
-    color: colors.text,
+    color: "#FFFFFF",
   },
   subtitle: {
-    ...typography.bodyMuted,
-    color: colors.textMuted,
-    fontSize: 15,
+    ...typography.pageSubtitle,
   },
   bullet: {
     color: colors.text,

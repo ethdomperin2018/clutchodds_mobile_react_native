@@ -3,11 +3,11 @@ import type { ArbitrageOpportunity, LineShopPick } from "@/lib/odds/types";
 import { arbRoiPercent } from "@/lib/format";
 import { meetsMinPercent2, primaryEvPercent } from "@/lib/valueBets/format";
 
-function normalizeBookKey(bookKey: string): string {
+export function normalizeBookKey(bookKey: string): string {
   return bookKey.toLowerCase();
 }
 
-function filterArbsByBooks(
+export function filterArbsByBooks(
   arbs: ArbitrageOpportunity[],
   allowedBooks: ReadonlySet<string>
 ): ArbitrageOpportunity[] {
@@ -17,7 +17,7 @@ function filterArbsByBooks(
   );
 }
 
-function filterArbsBySports(
+export function filterArbsBySports(
   arbs: ArbitrageOpportunity[],
   sportKeys: ReadonlySet<string>
 ): ArbitrageOpportunity[] {
@@ -25,7 +25,7 @@ function filterArbsBySports(
   return arbs.filter((arb) => sportKeys.has(arb.sportKey));
 }
 
-function filterArbsByQuoteSync(
+export function filterArbsByQuoteSync(
   arbs: ArbitrageOpportunity[],
   snapshotFetchedAt: string | undefined,
   maxSkewMs: number,

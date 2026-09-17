@@ -176,7 +176,8 @@ export function useDashboardMarket(options: {
     const rows = buildDashboardPredictionRows(
       rawPicks,
       predictions,
-      new Date(nowMs)
+      new Date(nowMs),
+      nowMs
     );
     return [...rows].sort(compareDashboardPredictionRows);
   }, [elite, pro, rawPicks, predictions, nowMs]);

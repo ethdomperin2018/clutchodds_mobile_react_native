@@ -17,4 +17,9 @@ export const oddsApi = {
     });
     return apiRequest<OddsLightFeedResponse>(`/api/odds?${q}`);
   },
+  getArbFeed: (totalStake = 1000, light = true) => {
+    const q = new URLSearchParams({ totalStake: String(totalStake) });
+    if (light) q.set("light", "1");
+    return apiRequest<OddsLightFeedResponse>(`/api/odds?${q}`);
+  },
 };
