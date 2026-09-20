@@ -8,12 +8,17 @@ export const oddsApi = {
     apiRequest<OddsSnapshotResponse>(
       `/api/odds?snapshot=1&totalStake=${totalStake}`
     ),
-  getLightFeed: (totalStake = 1000, minEdge = 0) => {
+  getLightFeed: (
+    totalStake = 1000,
+    minEdge = 0,
+    options?: { strictLive?: boolean }
+  ) => {
+    const strictLive = options?.strictLive ?? DASHBOARD_DEFAULTS.strictLive;
     const q = new URLSearchParams({
       totalStake: String(totalStake),
       minEdge: String(minEdge),
       light: "1",
-      strictLive: DASHBOARD_DEFAULTS.strictLive ? "1" : "0",
+      strictLive: strictLive ? "1" : "0",
     });
     return apiRequest<OddsLightFeedResponse>(`/api/odds?${q}`);
   },

@@ -8,6 +8,13 @@ export type ParsedLineShopBetNote = {
   edgePercent: number | null;
 };
 
+export function lineShopPickLogKey(
+  eventId: string,
+  side: "home" | "away"
+): string {
+  return `${eventId}:${side}`;
+}
+
 export function parseLineShopFromNotes(
   notes: string | null
 ): ParsedLineShopBetNote | null {

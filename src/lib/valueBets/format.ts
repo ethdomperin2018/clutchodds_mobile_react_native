@@ -42,3 +42,28 @@ export function computeDisplayModelEdge(
     Math.round(modelWinProbability) - Math.round(marketImpliedProbability)
   );
 }
+
+export function formatSignedPercent(value: number): string {
+  const sign = value >= 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
+}
+
+/** Short confidence label for gauges (High / Med-High / Med / Low). */
+export function displayConfidenceShortLabel(score: number): string {
+  const clamped = displayConfidenceScore(score);
+  if (clamped >= 7) return "High";
+  if (clamped >= 6.5) return "Med-High";
+  if (clamped >= 5) return "Med";
+  return "Low";
+}
+
+export function sportLeagueLabel(sportTitle: string): string {
+  const parts = sportTitle.trim().split(/\s+/);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0]!.slice(0, 4).toUpperCase();
+  return parts
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 4)
+    .toUpperCase();
+}

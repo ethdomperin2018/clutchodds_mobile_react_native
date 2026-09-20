@@ -1,29 +1,28 @@
 import { StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "@/components/layout/AppScreen";
+import { pageHeaderStyles } from "@/components/layout/pageHeaderStyles";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatusPill } from "@/components/ui/StatusPill";
 import { colors } from "@/theme/tokens";
-import { fonts, typography } from "@/theme/typography";
+import { fonts } from "@/theme/typography";
 
 type PlaceholderScreenProps = {
   title: string;
   subtitle: string;
   bullets: string[];
-  tone?: "success" | "info" | "warning";
 };
 
 export function PlaceholderScreen({
   title,
   subtitle,
   bullets,
-  tone = "info",
 }: PlaceholderScreenProps) {
   return (
     <AppScreen>
-      <StatusPill label="Scaffold" tone={tone} />
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+      <View style={pageHeaderStyles.header}>
+        <Text style={pageHeaderStyles.title}>{title}</Text>
+        <Text allowFontScaling={false} style={pageHeaderStyles.subtitle}>
+          {subtitle}
+        </Text>
       </View>
 
       <SectionCard
@@ -41,16 +40,6 @@ export function PlaceholderScreen({
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: 6,
-  },
-  title: {
-    ...typography.pageTitle,
-    color: "#FFFFFF",
-  },
-  subtitle: {
-    ...typography.pageSubtitle,
-  },
   bullet: {
     color: colors.text,
     fontFamily: fonts.sansRegular,

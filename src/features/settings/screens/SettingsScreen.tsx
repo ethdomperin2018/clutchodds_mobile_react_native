@@ -1,12 +1,13 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AppScreen } from "@/components/layout/AppScreen";
+import { pageHeaderStyles } from "@/components/layout/pageHeaderStyles";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useSession } from "@/features/auth/SessionProvider";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
 import { colors, radii } from "@/theme/tokens";
-import { fonts, typography } from "@/theme/typography";
+import { fonts } from "@/theme/typography";
 
 export function SettingsScreen() {
   const { logout, user } = useSession();
@@ -19,9 +20,9 @@ export function SettingsScreen() {
 
   return (
     <AppScreen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>
+      <View style={pageHeaderStyles.header}>
+        <Text style={pageHeaderStyles.title}>Profile</Text>
+        <Text allowFontScaling={false} style={pageHeaderStyles.subtitle}>
           Account session and profile details for your Clutch Odds login.
         </Text>
       </View>
@@ -65,18 +66,10 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: 6,
-  },
-  title: {
-    ...typography.pageTitle,
-    color: "#FFFFFF",
-  },
-  subtitle: {
-    ...typography.pageSubtitle,
-  },
   row: {
-    ...typography.bodyMuted,
+    fontFamily: fonts.sansRegular,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.textMuted,
   },
   value: {

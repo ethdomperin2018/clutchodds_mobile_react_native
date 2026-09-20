@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router, type Href } from "expo-router";
 import {
@@ -12,15 +12,17 @@ import {
   View,
   type LayoutRectangle,
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import {
   NavIconArbitrage,
   NavIconPrediction,
   NavIconValueBets,
 } from "@/components/icons/appNavIcons";
-import { PnlTrendLineChart, PNL_CHART_DEFAULT_HEIGHT } from "@/components/charts/PnlTrendLineChart";
+import { PnlTrendLineChart, PNL_CHART_DASHBOARD_HEIGHT } from "@/components/charts/PnlTrendLineChart";
 import { TeamLogo, TeamLogoPair } from "@/components/TeamLogo";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { OddsApiErrorBanner } from "@/components/ui/OddsApiErrorBanner";
+import { pageChromeStyles } from "@/components/layout/pageHeaderStyles";
 import { AccountInactiveNotice } from "@/features/auth/AccountInactiveNotice";
 import { useSession } from "@/features/auth/SessionProvider";
 import { useDashboardMarket } from "@/features/dashboard/useDashboardMarket";
@@ -37,7 +39,7 @@ import {
   formatLocalDateTime,
 } from "@/lib/format";
 import { DASHBOARD_LINE_SHOP_LIMIT } from "@/lib/odds/dashboardMarket";
-import { openPricing, openTelegramChannel, openWebPath } from "@/lib/openLinks";
+import { openPricing, openTelegramChannel } from "@/lib/openLinks";
 import { isEliteUser, isProUser } from "@/lib/planAccess";
 import type { DashboardPredictionRow } from "@/lib/predictions/rows";
 import { awayAtHomeLabel, shortTeamName } from "@/lib/teamDisplay";
@@ -74,12 +76,27 @@ const SPORT_TABS = [
 
 type OppTab = "edge" | "arb" | "prediction";
 
+/** Keep Top Opportunities body height stable across tabs (4 rows + gaps). */
+const OPP_ROW_MIN_HEIGHT = 60;
+const OPP_LIST_GAP = 8;
+const OPP_BODY_HEIGHT =
+  DASHBOARD_LINE_SHOP_LIMIT * OPP_ROW_MIN_HEIGHT +
+  (DASHBOARD_LINE_SHOP_LIMIT - 1) * OPP_LIST_GAP;
+
 function LiveDot() {
   return (
     <View style={styles.liveDotWrap}>
       <View style={styles.liveDotPing} />
       <View style={styles.liveDot} />
     </View>
+  );
+}
+
+function TelegramIcon() {
+  return (
+    <Svg fill="#FFFFFF" height={16} viewBox="0 0 24 24" width={16}>
+      <Path d="M21.8 4.2L2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.7.4.9 1 .9.6 0 .8-.3 1.1-.6l2.7-2.6 5.6 4.1c1 .6 1.8.3 2-.9l3.6-17c.4-1.5-.5-2.1-1.5-1.7z" />
+    </Svg>
   );
 }
 
@@ -131,7 +148,7 @@ function SummaryStrip({
       delayMs: 80,
     },
     {
-      label: "Prediction",
+      label: "Predictions",
       value: elite ? predictionCount : null,
       locked: !elite,
       spin: elite && predictionLoading,
@@ -176,6 +193,14 @@ function SummaryStrip({
   );
 }
 
+function OppEmptyState({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.oppBodyFill}>
+      <Text style={styles.emptyCopy}>{children}</Text>
+    </View>
+  );
+}
+
 function OppEdgeList({
   picks,
   resetKey,
@@ -184,9 +209,7 @@ function OppEdgeList({
   resetKey?: string;
 }) {
   if (picks.length === 0) {
-    return (
-      <Text style={styles.emptyCopy}>No +EV picks in the current snapshot.</Text>
-    );
+    return <OppEmptyState>No +EV picks in the current snapshot.</OppEmptyState>;
   }
 
   return (
@@ -247,9 +270,9 @@ function OppArbList({
 }) {
   if (arbs.length === 0) {
     return (
-      <Text style={styles.emptyCopy}>
+      <OppEmptyState>
         No arbitrage opportunities in the current snapshot.
-      </Text>
+      </OppEmptyState>
     );
   }
 
@@ -272,7 +295,7 @@ function OppArbList({
             </Text>
           </View>
           <View style={styles.oppMetric}>
-            <Text style={styles.oppMetricLabel}>ROI</Text>
+            <Text style={styles.oppMetricLabelRoi}>ROI</Text>
             <AnimatedNumber
               format="percent-2"
               resetKey={resetKey}
@@ -315,9 +338,7 @@ function OppPredictionList({
   resetKey?: string;
 }) {
   if (rows.length === 0) {
-    return (
-      <Text style={styles.emptyCopy}>No model predictions right now.</Text>
-    );
+    return <OppEmptyState>No model predictions right now.</OppEmptyState>;
   }
 
   return (
@@ -725,17 +746,14 @@ export function DashboardScreen() {
     return (
       <View style={styles.safe}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={pageChromeStyles.scroll}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <View style={styles.headerCopy}>
-              <Text style={styles.pageTitle}>Dashboard</Text>
-              <Text style={styles.subtitle}>
-                Live market intelligence. Find the best edges, arbs, and
-                insights.
-              </Text>
-            </View>
+          <View style={styles.header}>
+            <Text style={styles.pageTitle}>Dashboard</Text>
+            <Text allowFontScaling={false} style={styles.subtitle}>
+              Live market intelligence. Find the best edges, arbs, and insights.
+            </Text>
           </View>
           <AccountInactiveNotice />
         </ScrollView>
@@ -746,26 +764,26 @@ export function DashboardScreen() {
   return (
     <View style={styles.safe}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={pageChromeStyles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
+        <View style={styles.header}>
+          <View style={styles.headerTitleRow}>
             <Text style={styles.pageTitle}>Dashboard</Text>
-            <Text style={styles.subtitle}>
-              Live market intelligence. Find the best edges, arbs, and insights.
-            </Text>
+            <View style={styles.statusRow}>
+              <LiveDot />
+              <Text style={styles.statusText}>
+                {refreshing
+                  ? "Refreshing…"
+                  : snapshotAgeSec != null
+                    ? `Updated ${snapshotAgeSec}s ago`
+                    : "Waiting for snapshot"}
+              </Text>
+            </View>
           </View>
-          <View style={styles.statusRow}>
-            <LiveDot />
-            <Text style={styles.statusText}>
-              {refreshing
-                ? "Refreshing…"
-                : snapshotAgeSec != null
-                  ? `Updated ${snapshotAgeSec}s ago`
-                  : "Waiting for snapshot"}
-            </Text>
-          </View>
+          <Text allowFontScaling={false} style={styles.subtitle}>
+            Live market intelligence. Find the best edges, arbs, and insights.
+          </Text>
         </View>
 
         {error ? (
@@ -925,7 +943,7 @@ export function DashboardScreen() {
                 {pnlChart ? (
                   <PnlTrendLineChart
                     data={pnlChart}
-                    height={PNL_CHART_DEFAULT_HEIGHT}
+                    height={PNL_CHART_DASHBOARD_HEIGHT}
                   />
                 ) : (
                   <Text style={styles.pnlHint}>
@@ -968,11 +986,16 @@ export function DashboardScreen() {
             iconBg="rgba(139,92,246,0.15)"
             iconColor="#C4B5FD"
             title="Model Predictions"
+            onPress={
+              user
+                ? undefined
+                : () => void openPricing("/model-predictions")
+            }
           />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>How It Works</Text>
+          <Text style={styles.sectionCardTitle}>How It Works</Text>
           <Text style={styles.howSub}>3 simple steps to smarter betting</Text>
           <View style={styles.howList}>
             {HOW_STEPS.map((text, index) => (
@@ -986,37 +1009,38 @@ export function DashboardScreen() {
           </View>
           <GhostButton
             label="Learn more"
-            onPress={() => void openWebPath("/#how-it-works")}
+            onPress={() => router.push("/(app)/(tabs)/profile")}
           />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Join Clutch Odds Arbs</Text>
-          <Text style={styles.telegramCopy}>
-            Get live and upcoming arbitrage alerts on Telegram (~every 5 min).
-            Never miss risk-free profits again.
-          </Text>
-          <Pressable
-            onPress={() => {
-              if (pro) void openTelegramChannel();
-              else void openPricing("/dashboard");
-            }}
-            style={({ pressed }) => [
-              styles.telegramBtn,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text style={styles.telegramBtnText}>
-              {pro ? "Join Telegram" : "Unlock with Pro"}
+        <View style={styles.telegramCard}>
+          <View style={styles.telegramCopyCol}>
+            <Text style={styles.sectionCardTitle}>Join Clutch Odds Arbs</Text>
+            <Text style={styles.telegramCopy}>
+              Get live and upcoming arbitrage alerts on Telegram (~every 5 min).
+              Never miss risk-free profits again.
             </Text>
-            {pro ? (
-              <Ionicons color="#FFFFFF" name="paper-plane" size={14} />
-            ) : null}
-          </Pressable>
+            <Pressable
+              onPress={() => {
+                if (pro) void openTelegramChannel();
+                else void openPricing("/dashboard");
+              }}
+              style={({ pressed }) => [
+                styles.telegramBtn,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <Text style={styles.telegramBtnText}>
+                {pro ? "Join Telegram" : "Unlock with Pro"}
+              </Text>
+              {pro ? <TelegramIcon /> : null}
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.eliteCard}>
-          <Text style={styles.cardTitle}>Ready to Maximize Your Edge?</Text>
+          <View style={styles.eliteGlow} pointerEvents="none" />
+          <Text style={styles.sectionCardTitle}>Ready to Maximize Your Edge?</Text>
           <Text style={styles.eliteCopy}>
             {elite
               ? "You're on Elite — jump into Model Predictions or keep scanning arbs and value."
@@ -1026,7 +1050,7 @@ export function DashboardScreen() {
             {(elite ? ELITE_ACTIVE_FEATURES : ELITE_UPSELL_FEATURES).map(
               (item) => (
                 <View key={item} style={styles.eliteItem}>
-                  <Ionicons color={colors.success} name="checkmark" size={16} />
+                  <Ionicons color="#34D399" name="checkmark" size={16} />
                   <Text style={styles.eliteItemText}>{item}</Text>
                 </View>
               )
@@ -1060,26 +1084,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
-    gap: 16,
-  },
-  headerRow: {
-    gap: 12,
-  },
-  headerCopy: {
+  header: {
     gap: 6,
+    marginBottom: 0,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(39,39,42,0.8)",
+  },
+  headerTitleRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   pageTitle: {
     ...typography.pageTitle,
     color: "#FFFFFF",
+    flexShrink: 1,
   },
   subtitle: {
     ...typography.pageSubtitle,
   },
   statusRow: {
+    flexShrink: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -1121,10 +1149,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   predictionSkeleton: {
-    gap: 8,
+    minHeight: OPP_BODY_HEIGHT,
+    gap: OPP_LIST_GAP,
   },
   skeletonRow: {
-    height: 56,
+    height: OPP_ROW_MIN_HEIGHT,
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
@@ -1258,6 +1287,10 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   cardHeader: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
   },
   cardTitle: {
@@ -1265,9 +1298,15 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
   },
+  /** Web phone `text-base` for How / Telegram / Elite section titles. */
+  sectionCardTitle: {
+    fontFamily: fonts.displaySemiBold,
+    color: colors.text,
+    fontSize: 16,
+  },
   tabBar: {
     flexDirection: "row",
-    alignSelf: "flex-start",
+    flexShrink: 0,
     maxWidth: "100%",
     borderRadius: 999,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -1291,7 +1330,15 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   oppBody: {
-    minHeight: 72,
+    // Fixed slot for 4 rows so Edge / Arb / Prediction don't resize the card.
+    minHeight: OPP_BODY_HEIGHT,
+  },
+  oppBodyFill: {
+    minHeight: OPP_BODY_HEIGHT,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 24,
   },
   loader: {
     marginVertical: 24,
@@ -1301,14 +1348,18 @@ const styles = StyleSheet.create({
     color: "#71717A",
     fontSize: 14,
     lineHeight: 20,
+    textAlign: "center",
+    maxWidth: 280,
   },
   oppList: {
-    gap: 8,
+    minHeight: OPP_BODY_HEIGHT,
+    gap: OPP_LIST_GAP,
   },
   oppRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    minHeight: OPP_ROW_MIN_HEIGHT,
     borderRadius: 12,
     backgroundColor: "#111111",
     paddingHorizontal: 12,
@@ -1344,6 +1395,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
+  oppMetricLabelRoi: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#71717A",
+    fontSize: 10,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
   oppMetricGreen: {
     fontFamily: fonts.displayBold,
     color: colors.success,
@@ -1359,7 +1417,7 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   predictionLocked: {
-    minHeight: 160,
+    minHeight: OPP_BODY_HEIGHT,
     justifyContent: "center",
     gap: 12,
     borderRadius: 12,
@@ -1562,9 +1620,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansRegular,
     color: "#71717A",
     fontSize: 12,
-    marginTop: -6,
   },
   howList: {
+    marginTop: 8,
     gap: 14,
   },
   howRow: {
@@ -1578,7 +1636,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.success,
+    // Web `bg-emerald-500`
+    backgroundColor: "#10B981",
   },
   howNumberText: {
     fontFamily: fonts.sansBold,
@@ -1593,15 +1652,26 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingTop: 4,
   },
+  telegramCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "#161616",
+    padding: 16,
+    overflow: "hidden",
+  },
+  telegramCopyCol: {
+    gap: 8,
+  },
   telegramCopy: {
     fontFamily: fonts.sansRegular,
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
-    marginTop: -4,
   },
   telegramBtn: {
-    marginTop: 4,
+    marginTop: 8,
+    alignSelf: "stretch",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1619,6 +1689,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   eliteCard: {
+    position: "relative",
+    overflow: "hidden",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,30,30,0.3)",
@@ -1626,12 +1698,20 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
+  eliteGlow: {
+    position: "absolute",
+    right: -32,
+    top: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(255,30,30,0.2)",
+  },
   eliteCopy: {
     fontFamily: fonts.sansRegular,
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
-    marginTop: -4,
   },
   eliteList: {
     gap: 8,

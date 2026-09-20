@@ -1,19 +1,26 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { BookLogo } from "@/components/BookLogo";
+import {
+  pageChromeStyles,
+  pageHeaderStyles,
+} from "@/components/layout/pageHeaderStyles";
 import { getBookDisplayName } from "@/lib/bookmakerDisplay";
 import {
   TRACKED_EXCHANGE_KEYS,
   TRACKED_SPORTSBOOK_KEYS,
 } from "@/lib/odds/venues";
-import { colors } from "@/theme/tokens";
-import { fonts, typography } from "@/theme/typography";
+import { fonts } from "@/theme/typography";
 
 export function BookmakersScreen() {
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bookmakers</Text>
-        <Text style={styles.subtitle}>
+    <ScrollView
+      contentContainerStyle={pageChromeStyles.scroll}
+      showsVerticalScrollIndicator={false}
+      style={pageChromeStyles.root}
+    >
+      <View style={pageHeaderStyles.header}>
+        <Text style={pageHeaderStyles.title}>Bookmakers</Text>
+        <Text allowFontScaling={false} style={pageHeaderStyles.subtitle}>
           Sportsbooks and exchanges we track from The Odds API — US books,
           Polymarket, Kalshi, Novig, and Pinnacle.
         </Text>
@@ -57,26 +64,6 @@ function BookmakerSection({
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
-    gap: 32,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(39,39,42,0.8)",
-    gap: 6,
-  },
-  title: {
-    ...typography.pageTitle,
-    color: "#FFFFFF",
-  },
-  subtitle: {
-    ...typography.pageSubtitle,
-  },
   section: {
     gap: 12,
   },
@@ -105,18 +92,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    borderRadius: 8,
+    gap: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(24,24,27,0.4)",
-    paddingHorizontal: 16,
+    backgroundColor: "#161616",
+    paddingHorizontal: 12,
     paddingVertical: 12,
   },
   rowTitle: {
     flex: 1,
     fontFamily: fonts.sansMedium,
-    color: "#FFFFFF",
-    fontSize: 14,
+    color: "#E4E4E7",
+    fontSize: 13,
   },
 });

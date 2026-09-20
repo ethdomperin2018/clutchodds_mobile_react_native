@@ -17,11 +17,16 @@ const PNL_CHART = {
 } as const;
 
 /** Same margins as web Recharts `LineChart` (bottom padded for tick labels). */
-const MARGIN = { top: 8, right: 12, left: 0, bottom: 22 } as const;
-const Y_AXIS_WIDTH = 50;
+const MARGIN_DEFAULT = { top: 8, right: 8, left: 0, bottom: 22 } as const;
+/** Dashboard forces `!h-16` (64px) — tighter margins so the plot still fits. */
+const MARGIN_COMPACT = { top: 4, right: 8, left: 0, bottom: 14 } as const;
+const Y_AXIS_WIDTH_DEFAULT = 50;
+const Y_AXIS_WIDTH_COMPACT = 36;
 
 /** Web default `PNL_CHART.heightClass` = `h-40` (160). */
 export const PNL_CHART_DEFAULT_HEIGHT = 160;
+/** Web dashboard `PnlTrendLineChart className="!h-16"`. */
+export const PNL_CHART_DASHBOARD_HEIGHT = 64;
 
 type PnlTrendLineChartProps = {
   data: PnlChartPoint[];
@@ -152,6 +157,11 @@ export function PnlTrendLineChart({
   height = PNL_CHART_DEFAULT_HEIGHT,
 }: PnlTrendLineChartProps) {
   const [width, setWidth] = useState(0);
+  const compact = height <= 80;
+  const margin = compact ? MARGIN_COMPACT : MARGIN_DEFAULT;
+  const yAxisWidth = compact ? Y_AXIS_WIDTH_COMPACT : Y_AXIS_WIDTH_DEFAULT;
+  const tickFontSize = compact ? 9 : PNL_CHART.tickFontSize;
+  const xTickOffset = compact ? 11 : 14;
 
   const chart = useMemo(() => {
     if (data.length === 0 || width <= 0) return null;
@@ -159,14 +169,14 @@ export function PnlTrendLineChart({
     const single = data.length === 1;
     const points = data;
 
-    const plotLeft = MARGIN.left + Y_AXIS_WIDTH;
-    const plotRight = width - MARGIN.right;
-    const plotTop = MARGIN.top;
-    const plotBottom = height - MARGIN.bottom;
+    const plotLeft = margin.left + yAxisWidth;
+    const plotRight = width - margin.right;
+    const plotTop = margin.top;
+    const plotBottom = height - margin.bottom;
     const plotW = Math.max(plotRight - plotLeft, 1);
     const plotH = Math.max(plotBottom - plotTop, 1);
 
-    const yTickCount = Math.max(2, Math.min(5, Math.floor(plotH / 28) + 1));
+    const yTickCount = Math.max(2, Math.min(compact ? 3 : 5, Math.floor(plotH / 28) + 1));
     const yValues = points.map((p) => p.cumulative);
     const { domainMin, domainMax, ticks: yTicks } = niceScale(
       Math.min(...yValues),
@@ -179,7 +189,7 @@ export function PnlTrendLineChart({
     const xMax = points[points.length - 1]!.index;
     const xSpan = Math.max(xMax - xMin, 1);
     // ~28px per label keeps bet numbers from colliding.
-    const maxXTicks = Math.max(2, Math.floor(plotW / 28));
+    const maxXTicks = Math.max(2, Math.floor(plotW / (compact ? 36 : 28)));
     const xTicks = single
       ? [xMin]
       : xAxisTicks(xMin, xMax, maxXTicks);
@@ -214,7 +224,7 @@ export function PnlTrendLineChart({
       coords,
       path: monotonePath(pathCoords),
     };
-  }, [data, height, width]);
+  }, [data, height, width, margin, yAxisWidth, compact]);
 
   return (
     <View
@@ -295,10 +305,10 @@ export function PnlTrendLineChart({
               <SvgText
                 key={`ytick-${tick}`}
                 fill={PNL_CHART.tickFill}
-                fontSize={PNL_CHART.tickFontSize}
+                fontSize={tickFontSize}
                 textAnchor="end"
                 x={chart.plotLeft - 6}
-                y={y + 4}
+                y={y + 3}
               >
                 {`$${Number(tick).toFixed(0)}`}
               </SvgText>
@@ -320,7 +330,7 @@ export function PnlTrendLineChart({
               <SvgText
                 key={`xtick-${tick}`}
                 fill={PNL_CHART.tickFill}
-                fontSize={PNL_CHART.tickFontSize}
+                fontSize={tickFontSize}
                 textAnchor={
                   isFirst && !chart.single
                     ? "start"
@@ -329,7 +339,7 @@ export function PnlTrendLineChart({
                       : "middle"
                 }
                 x={x}
-                y={chart.plotBottom + 14}
+                y={chart.plotBottom + xTickOffset}
               >
                 {String(tick)}
               </SvgText>

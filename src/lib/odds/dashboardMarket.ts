@@ -13,7 +13,7 @@ import { arbRoiPercent } from "@/lib/format";
 import { deriveTeaserConfidence } from "@/lib/valueBets/eliteInsights";
 import { primaryEvPercent } from "@/lib/valueBets/format";
 
-export const DASHBOARD_LINE_SHOP_LIMIT = 3;
+export const DASHBOARD_LINE_SHOP_LIMIT = 4;
 export const DASHBOARD_ARB_LIMIT = 6;
 
 export const DASHBOARD_DEFAULTS = {

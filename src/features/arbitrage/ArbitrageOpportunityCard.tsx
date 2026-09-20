@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Linking,
   Modal,
@@ -91,11 +91,28 @@ export function ArbitrageOpportunityCard({
   const [manualOdds, setManualOdds] = useState(() => initOddsInputs(feedQuote));
   const [manualError, setManualError] = useState<string | null>(null);
 
+  const feedSyncKey = useMemo(
+    () =>
+      [
+        feedQuote.eventId,
+        feedQuote.fetchedAt,
+        ...feedQuote.legs.map((l) => `${l.side}:${l.american}`),
+      ].join("|"),
+    [feedQuote.eventId, feedQuote.fetchedAt, feedQuote.legs]
+  );
+
+  useEffect(() => {
+    setManualQuote(null);
+    setManualOdds(initOddsInputs(feedQuote));
+    setManualError(null);
+    // feedQuote is read when feedSyncKey changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedSyncKey]);
+
   const usingManualOdds = Boolean(manualQuote);
   const displayQuote = manualQuote ?? feedQuote;
   const expired = !displayQuote.stillArbitrage;
   const currentRoi = quoteRoiPercent(displayQuote);
-  const feedSyncKey = `${feedQuote.fetchedAt}-${feedQuote.guaranteedProfit}-${feedQuote.totalStake}`;
   const isLive = new Date(displayQuote.commenceTime).getTime() <= nowMs;
   const arbTypeLabel = arbVenueKindLabel(classifyArbVenue(displayQuote.legs));
   const tone = profitColor(displayQuote.stillArbitrage);
@@ -340,7 +357,7 @@ export function ArbitrageOpportunityCard({
               <View style={styles.detailSection}>
               <Text style={styles.sectionTitle}>Place each leg</Text>
               <View style={styles.detailLegs}>
-                {displayQuote.legs.map((leg) => {
+                {displayQuote.legs.map((leg, index) => {
                   const toneAge = usingManualOdds
                     ? "unknown"
                     : legOddsAgeTone(leg, displayQuote.fetchedAt, nowMs);
@@ -356,9 +373,17 @@ export function ArbitrageOpportunityCard({
                     stake: leg.stake,
                     compact: true,
                   });
+                  const isLast = index === displayQuote.legs.length - 1;
                   return (
-                    <View key={leg.side} style={styles.detailLeg}>
+                    <View
+                      key={leg.side}
+                      style={[
+                        styles.detailLeg,
+                        isLast ? styles.detailLegLast : null,
+                      ]}
+                    >
                       <LegRow
+                        last
                         leg={leg}
                         overLimit={overLimit}
                         resetKey={feedSyncKey}
@@ -1333,6 +1358,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(255,255,255,0.06)",
+  },
+  detailLegLast: {
+    borderBottomWidth: 0,
   },
   detailLegFooter: {
     marginTop: 8,

@@ -11,6 +11,7 @@ import {
   computeArbitrageSummary,
   filterArbsByViewTab,
 } from "@/lib/arbitrage/summary";
+import { buildArbitrageEmptyCopy } from "@/lib/arbitrage/emptyCopy";
 import {
   arbMatchesTimeRange,
   type ArbitrageTimeRange,
@@ -316,6 +317,15 @@ export function useArbitrageBoard() {
     () => filterArbsByViewTab(arbs, "upcoming", nowMs),
     [arbs, nowMs]
   );
+  /** Live/Upcoming tab badges ignore sport filter (same base as summary strip). */
+  const liveArbCount = useMemo(
+    () => filterArbsByViewTab(arbsForSummary, "live", nowMs).length,
+    [arbsForSummary, nowMs]
+  );
+  const upcomingArbCount = useMemo(
+    () => filterArbsByViewTab(arbsForSummary, "upcoming", nowMs).length,
+    [arbsForSummary, nowMs]
+  );
   const sortedLiveArbs = useMemo(
     () => sortArbs(liveArbs, arbSort),
     [liveArbs, arbSort]
@@ -432,37 +442,10 @@ export function useArbitrageBoard() {
     }
   }, [loggingEventId, loggedEventIds]);
 
-  const emptyArbCopy = useMemo(() => {
-    if (bookArbs.length > 0 && hiddenByQuoteSync > 0) {
-      return `${bookArbs.length} arb(s) found but none have legs updated within ${maxLegSkewMs / 60_000} minutes of each other. Widen max line age gap or refresh.`;
-    }
-    if (sportArbs.length > 0 && bookFilterActive) {
-      return `${sportArbs.length} arb(s) found but none use only your selected sportsbooks. Adjust the book filter or clear it.`;
-    }
-    if (timeArbs.length > 0 && sportFilterActive) {
-      return `${timeArbs.length} arb(s) found but none match your selected sports. Adjust the sport filter or clear it.`;
-    }
-    if (roiArbs.length > 0 && timeRange !== "all") {
-      return `${roiArbs.length} arb(s) found but none are live or scheduled today. Switch Time Range to All or refresh.`;
-    }
-    if (allArbs.length > 0 && minRoi > 0) {
-      return `${allArbs.length} arb(s) found but none meet ROI ≥ ${minRoi}%. Lower the filter or refresh.`;
-    }
-    return `No cross-book arb on this snapshot (${games.length} games). Arbs are rare — try full refresh after line moves.`;
-  }, [
-    bookArbs.length,
-    hiddenByQuoteSync,
-    maxLegSkewMs,
-    sportArbs.length,
-    bookFilterActive,
-    timeArbs.length,
-    sportFilterActive,
-    roiArbs.length,
-    timeRange,
-    allArbs.length,
-    minRoi,
-    games.length,
-  ]);
+  const emptyArbCopy = useMemo(
+    () => buildArbitrageEmptyCopy(viewTab),
+    [viewTab]
+  );
 
   const activeSportTab =
     selectedSports.size === 1 ? [...selectedSports][0]! : ALL_SPORTS_TAB;
@@ -510,6 +493,8 @@ export function useArbitrageBoard() {
     theoreticalStakeHint,
     liveArbs,
     upcomingArbs,
+    liveArbCount,
+    upcomingArbCount,
     listedArbs,
     emptyArbCopy,
     arbsCount: arbs.length,

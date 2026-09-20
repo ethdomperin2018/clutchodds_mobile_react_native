@@ -9,6 +9,10 @@ import {
   uniqueEngineEventsForPredictionFetch,
   type ModelPredictionRow,
 } from "@/lib/modelPredictions/modelPredictionRows";
+import {
+  buildModelPredictionsFeaturedEmptyCopy,
+  buildModelPredictionsListEmptyCopy,
+} from "@/lib/modelPredictions/emptyCopy";
 import { fetchEnginePredictionsWithCache } from "@/lib/predictions/fetchEnginePredictions";
 import {
   lineShopPickToEnginePredictionInput,
@@ -228,28 +232,40 @@ export function useModelPredictionsBoard(options: {
     [picks, predictions, nowMs]
   );
 
+  const sportScopedRows = useMemo(() => {
+    if (sportTab === ALL_SPORTS) return allPredictionRows;
+    return allPredictionRows.filter((row) => row.pick.sportKey === sportTab);
+  }, [allPredictionRows, sportTab]);
+
   const filteredRows = useMemo(() => {
-    return allPredictionRows.filter((row) => {
-      if (sportTab !== ALL_SPORTS && row.pick.sportKey !== sportTab) {
-        return false;
-      }
+    return sportScopedRows.filter((row) => {
       if (!meetsMinConfidence(row.insights.confidenceScore, minConfidence)) {
         return false;
       }
       if (!meetsModelEdgeMin(row.modelEdge, minEdge)) return false;
       return true;
     });
-  }, [allPredictionRows, sportTab, minConfidence, minEdge]);
+  }, [sportScopedRows, minConfidence, minEdge]);
 
-  const featuredEmptyMessage = useMemo(() => {
-    if (allPredictionRows.length === 0) {
-      return "No engine predictions available right now. Check back closer to tip-off.";
-    }
-    if (sportTab !== ALL_SPORTS) {
-      return "No predictions for this sport with your current confidence / edge filters. Try All sports or lower filters.";
-    }
-    return "No games meet your confidence or model-edge filters. Lower filters to see more matchups.";
-  }, [allPredictionRows.length, sportTab]);
+  const emptyCopyInput = useMemo(
+    () => ({
+      allCount: allPredictionRows.length,
+      sportScopedCount: sportScopedRows.length,
+      filteredCount: filteredRows.length,
+      sportFilterActive: sportTab !== ALL_SPORTS,
+    }),
+    [
+      allPredictionRows.length,
+      sportScopedRows.length,
+      filteredRows.length,
+      sportTab,
+    ]
+  );
+
+  const featuredEmptyMessage = useMemo(
+    () => buildModelPredictionsFeaturedEmptyCopy(emptyCopyInput),
+    [emptyCopyInput]
+  );
 
   const top = useMemo(
     () => pickTopModelPredictionRow(filteredRows),
@@ -290,28 +306,15 @@ export function useModelPredictionsBoard(options: {
     });
   }, [rows, search]);
 
-  const listEmptyMessage = useMemo(() => {
-    const q = search.trim();
-    if (q && rows.length > 0) {
-      return `No matches for “${q}”. Clear search or try another team.`;
-    }
-    if (allPredictionRows.length > 0 && filteredRows.length === 0) {
-      if (sportTab !== ALL_SPORTS) {
-        return "No games match this sport plus your confidence / edge filters.";
-      }
-      return "No games meet your confidence or model-edge filters.";
-    }
-    if (allPredictionRows.length === 0) {
-      return "No predictions available right now.";
-    }
-    return "No predictions to show.";
-  }, [
-    search,
-    rows.length,
-    allPredictionRows.length,
-    filteredRows.length,
-    sportTab,
-  ]);
+  const listEmptyMessage = useMemo(
+    () =>
+      buildModelPredictionsListEmptyCopy({
+        ...emptyCopyInput,
+        searchQuery: search,
+        preSearchCount: rows.length,
+      }),
+    [emptyCopyInput, search, rows.length]
+  );
 
   const updatedAgoLabel =
     lastUpdatedAt === null ? null : formatUpdatedAgo(nowMs - lastUpdatedAt);

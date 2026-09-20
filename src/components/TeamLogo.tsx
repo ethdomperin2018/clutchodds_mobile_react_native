@@ -86,10 +86,13 @@ export function TeamLogoPair({
   sportKey,
   size = 28,
 }: TeamLogoPairProps) {
+  // Web uses `-ml-1.5` (−6px) overlap between logos.
   return (
     <View style={styles.pair}>
-      <TeamLogo size={size} sportKey={sportKey} teamName={awayTeam} />
-      <View style={[styles.overlap, { marginLeft: -size * 0.28 }]}>
+      <View style={styles.pairFront}>
+        <TeamLogo size={size} sportKey={sportKey} teamName={awayTeam} />
+      </View>
+      <View style={[styles.overlap, { marginLeft: -6 }]}>
         <TeamLogo size={size} sportKey={sportKey} teamName={homeTeam} />
       </View>
     </View>
@@ -110,6 +113,9 @@ const styles = StyleSheet.create({
   pair: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  pairFront: {
+    zIndex: 1,
   },
   overlap: {
     zIndex: 0,

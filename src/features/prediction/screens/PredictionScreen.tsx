@@ -269,7 +269,9 @@ function Header({
           </Pressable>
         ) : null}
       </View>
-      <Text style={styles.subtitle}>{PAGE_SUBTITLE}</Text>
+      <Text allowFontScaling={false} style={styles.subtitle}>
+        {PAGE_SUBTITLE}
+      </Text>
     </View>
   );
 }
@@ -322,11 +324,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    marginBottom: 4,
-    paddingBottom: 12,
+    gap: 6,
+    marginBottom: 0,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(39,39,42,0.8)",
-    gap: 6,
   },
   headerTop: {
     flexDirection: "row",

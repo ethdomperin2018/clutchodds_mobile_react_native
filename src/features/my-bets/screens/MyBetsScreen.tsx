@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { AppScreen } from "@/components/layout/AppScreen";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  pageChromeStyles,
+  pageHeaderStyles,
+} from "@/components/layout/pageHeaderStyles";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatusPill } from "@/components/ui/StatusPill";
 import { betsApi } from "@/lib/api/endpoints/bets";
 import { colors } from "@/theme/tokens";
-import { fonts, typography } from "@/theme/typography";
-import { StyleSheet, Text, View } from "react-native";
+import { fonts } from "@/theme/typography";
 
 export function MyBetsScreen() {
   const betsQuery = useQuery({
@@ -14,12 +16,16 @@ export function MyBetsScreen() {
   });
 
   return (
-    <AppScreen>
-      <StatusPill label="Backend-linked" tone="success" />
-      <View style={styles.header}>
-        <Text style={styles.title}>My Bets</Text>
-        <Text style={styles.subtitle}>
-          Ready for bet logging, history, and tracked outcomes against the existing `/api/bets` endpoint.
+    <ScrollView
+      contentContainerStyle={pageChromeStyles.scroll}
+      showsVerticalScrollIndicator={false}
+      style={pageChromeStyles.root}
+    >
+      <View style={pageHeaderStyles.header}>
+        <Text style={pageHeaderStyles.title}>My Bets</Text>
+        <Text allowFontScaling={false} style={pageHeaderStyles.subtitle}>
+          Manual bet log. Log arbs from the arbitrage board or picks from value
+          bets.
         </Text>
       </View>
 
@@ -30,31 +36,29 @@ export function MyBetsScreen() {
         <Text style={styles.row}>
           State:{" "}
           <Text style={styles.value}>
-            {betsQuery.isLoading ? "loading" : betsQuery.isError ? "error" : "ready"}
+            {betsQuery.isLoading
+              ? "loading"
+              : betsQuery.isError
+                ? "error"
+                : "ready"}
           </Text>
         </Text>
         <Text style={styles.row}>
           Recent bets:{" "}
-          <Text style={styles.value}>{betsQuery.data?.bets.length ?? "--"}</Text>
+          <Text style={styles.value}>
+            {betsQuery.data?.bets.length ?? "--"}
+          </Text>
         </Text>
       </SectionCard>
-    </AppScreen>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: 6,
-  },
-  title: {
-    ...typography.pageTitle,
-    color: "#FFFFFF",
-  },
-  subtitle: {
-    ...typography.pageSubtitle,
-  },
   row: {
-    ...typography.bodyMuted,
+    fontFamily: fonts.sansRegular,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.textMuted,
   },
   value: {

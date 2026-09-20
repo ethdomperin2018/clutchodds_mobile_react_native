@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BookLogo } from "@/components/BookLogo";
 import { SportTabIcon } from "@/components/SportTabIcon";
 import { OddsApiErrorBanner } from "@/components/ui/OddsApiErrorBanner";
+import { pageChromeStyles } from "@/components/layout/pageHeaderStyles";
 import { ArbitrageFiltersModal } from "@/features/arbitrage/ArbitrageFiltersModal";
 import { ArbitrageOpportunityCard } from "@/features/arbitrage/ArbitrageOpportunityCard";
 import {
@@ -51,7 +52,7 @@ export function ArbitrageScreen() {
   const pro = isProUser(user);
 
   if (!ready) {
-    return (
+  return (
       <View style={styles.centered}>
         <ActivityIndicator color={colors.success} />
         <Text style={styles.loadingCopy}>Loading…</Text>
@@ -62,7 +63,7 @@ export function ArbitrageScreen() {
   if (!accountActive) {
     return (
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={pageChromeStyles.scroll}
         showsVerticalScrollIndicator={false}
       >
         <Header filterCount={0} onOpenFilters={() => undefined} />
@@ -73,7 +74,7 @@ export function ArbitrageScreen() {
 
   if (!pro) {
     return (
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={pageChromeStyles.scroll} showsVerticalScrollIndicator={false}>
         <Header filterCount={0} onOpenFilters={() => undefined} />
         <ProUpgradeCard user={user} />
       </ScrollView>
@@ -103,7 +104,7 @@ function ArbitrageBoard() {
   return (
     <View style={styles.root}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={pageChromeStyles.scroll}
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
@@ -257,7 +258,7 @@ function ArbitrageBoard() {
                   board.viewTab === "live" ? styles.countTextLiveOn : null,
                 ]}
               >
-                {board.liveArbs.length}
+                {board.liveArbCount}
               </Text>
             </View>
           </Pressable>
@@ -288,7 +289,7 @@ function ArbitrageBoard() {
                   board.viewTab === "upcoming" ? styles.countTextUpcomingOn : null,
                 ]}
               >
-                {board.upcomingArbs.length}
+                {board.upcomingArbCount}
               </Text>
             </View>
           </Pressable>
@@ -353,16 +354,10 @@ function ArbitrageBoard() {
               </View>
             </View>
 
-            {board.arbsCount === 0 && !board.refreshing ? (
-              <Text style={styles.emptyBox}>{board.emptyArbCopy}</Text>
-            ) : listed.length === 0 ? (
-              <Text style={styles.emptyCopy}>
-                {board.viewTab === "live"
-                  ? board.upcomingArbs.length > 0
-                    ? "No live arbs right now. Upcoming still has opportunities — switch tabs or refresh after lines move."
-                    : "No live opportunities right now."
-                  : "No upcoming opportunities right now."}
-              </Text>
+            {listed.length === 0 && !board.refreshing ? (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyBoxText}>{board.emptyArbCopy}</Text>
+              </View>
             ) : (
               <View style={styles.list}>
                 {listed.map((arb) => (
@@ -456,7 +451,9 @@ function Header({
           ) : null}
         </Pressable>
       </View>
-      <Text style={styles.subtitle}>US moneyline arbitrage opportunities.</Text>
+      <Text allowFontScaling={false} style={styles.subtitle}>
+        US moneyline arbitrage opportunities.
+      </Text>
     </View>
   );
 }
@@ -884,16 +881,12 @@ const styles = StyleSheet.create({
     color: "#71717A",
     fontSize: 14,
   },
-  scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
-    gap: 16,
-  },
   header: {
-    paddingBottom: 12,
+    gap: 6,
+    marginBottom: 0,
+    paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(39, 39, 42, 0.8)",
+    borderBottomColor: "rgba(39,39,42,0.8)",
   },
   headerTop: {
     flexDirection: "row",
@@ -909,7 +902,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.pageSubtitle,
-    marginTop: 6,
   },
   filtersBtn: {
     flexShrink: 0,
@@ -1443,24 +1435,21 @@ const styles = StyleSheet.create({
   },
   emptyBox: {
     margin: 12,
+    height: 152,
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     backgroundColor: "rgba(24,24,27,0.4)",
     paddingHorizontal: 16,
-    paddingVertical: 32,
+  },
+  emptyBoxText: {
     fontFamily: fonts.sansRegular,
     color: "#A1A1AA",
     fontSize: 14,
-    textAlign: "center",
-  },
-  emptyCopy: {
-    paddingHorizontal: 12,
-    paddingBottom: 16,
-    fontFamily: fonts.sansRegular,
-    color: "#71717A",
-    fontSize: 14,
     lineHeight: 20,
+    textAlign: "center",
   },
   extraCard: {
     minWidth: 0,
