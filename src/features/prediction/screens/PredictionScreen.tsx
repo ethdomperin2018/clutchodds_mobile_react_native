@@ -39,7 +39,7 @@ import { fonts, typography } from "@/theme/typography";
 import type { AuthUser } from "@/types/auth";
 
 const PAGE_SUBTITLE =
-  "AI-powered pre-game win probability, confidence, and projected edge.";
+  "AI-powered pre-game win probability, confidence, and model edge.";
 
 export function PredictionScreen() {
   const { user, ready, refresh } = useSession();
@@ -127,16 +127,15 @@ function EliteBoardShell({
 }: {
   board: ReturnType<typeof useModelPredictionsBoard>;
 }) {
-  if (!board.initialLoadComplete) {
-    return (
-      <View style={styles.boardShell}>
-        <ActivityIndicator color={colors.success} />
-        <Text style={styles.boardShellCopy}>Loading model predictions…</Text>
-      </View>
-    );
-  }
-
   const showUpdated = Boolean(board.updatedAgoLabel) || board.loading;
+  const refreshing = board.loading && board.initialLoadComplete;
+  const hasVisibleData = board.top != null || board.searched.length > 0;
+  const showRefreshOverlay = refreshing && hasVisibleData;
+  const showFeaturedPlaceholder = board.loading && !board.top;
+  const showListPlaceholder = board.loading && board.searched.length === 0;
+  const contentLoadingMessage = !board.initialLoadComplete
+    ? "Loading model predictions…"
+    : "Refreshing…";
 
   return (
     <View style={styles.boardStack}>
@@ -195,23 +194,44 @@ function EliteBoardShell({
         onChange={board.setSportTab}
       />
 
-      {board.top ? (
-        <TopPredictionCard nowMs={board.nowMs} row={board.top} />
-      ) : (
-        <TopPredictionEmpty message={board.featuredEmptyMessage} />
-      )}
+      <View
+        style={[
+          styles.boardContent,
+          showRefreshOverlay ? styles.boardContentRefreshing : null,
+        ]}
+      >
+        {showRefreshOverlay ? (
+          <View style={styles.refreshOverlay} pointerEvents="none">
+            <View style={styles.refreshChip}>
+              <ActivityIndicator color="#A78BFA" size="small" />
+              <Text style={styles.refreshChipText}>Refreshing…</Text>
+            </View>
+          </View>
+        ) : null}
 
-      <PredictionsListSection
-        emptyMessage={board.listEmptyMessage}
-        nowMs={board.nowMs}
-        onSearchChange={board.setSearch}
-        onSortChange={board.setSortKey}
-        onToggleSortDir={board.toggleSortDir}
-        rows={board.searched}
-        search={board.search}
-        sort={board.sort}
-        sortDir={board.sortDir}
-      />
+        {showFeaturedPlaceholder ? (
+          <TopPredictionEmpty loading message={contentLoadingMessage} />
+        ) : board.top ? (
+          <TopPredictionCard nowMs={board.nowMs} row={board.top} />
+        ) : (
+          <TopPredictionEmpty message={board.featuredEmptyMessage} />
+        )}
+
+        <PredictionsListSection
+          emptyMessage={board.listEmptyMessage}
+          loadingMessage={
+            showListPlaceholder ? contentLoadingMessage : null
+          }
+          nowMs={board.nowMs}
+          onSearchChange={board.setSearch}
+          onSortChange={board.setSortKey}
+          onToggleSortDir={board.toggleSortDir}
+          rows={board.searched}
+          search={board.search}
+          sort={board.sort}
+          sortDir={board.sortDir}
+        />
+      </View>
 
       <AboutModelPredictionsCard />
     </View>
@@ -290,7 +310,7 @@ function EliteUpgradeCard({ pro }: { pro: boolean }) {
       <Text style={styles.gateCopy}>
         {pro
           ? `Upgrade to Elite (${elitePrice}) for AI win probability, confidence, and model edge across MLB, NBA, NFL, and NHL.`
-          : "Elite unlocks the Prediction Engine — model win probability, confidence, and projected edge. Start with Pro or go straight to Elite."}
+          : "Elite unlocks the Prediction Engine — model win probability, confidence, and model edge. Start with Pro or go straight to Elite."}
       </Text>
       <Pressable
         onPress={() => void openPricing("/model-predictions")}
@@ -400,6 +420,36 @@ const styles = StyleSheet.create({
   boardStack: {
     gap: 12,
   },
+  boardContent: {
+    position: "relative",
+    gap: 12,
+  },
+  boardContentRefreshing: {
+    opacity: 0.6,
+  },
+  refreshOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+    alignItems: "center",
+    paddingTop: 64,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  refreshChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(9,9,11,0.9)",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  refreshChipText: {
+    fontFamily: fonts.sansRegular,
+    color: "#E4E4E7",
+    fontSize: 14,
+  },
   refreshBlock: {
     gap: 8,
   },
@@ -422,24 +472,6 @@ const styles = StyleSheet.create({
   },
   updatedIdle: {
     color: "#A1A1AA",
-  },
-  boardShell: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(24,24,27,0.4)",
-    paddingHorizontal: 16,
-    paddingVertical: 28,
-    alignItems: "center",
-    gap: 8,
-  },
-  boardShellCopy: {
-    marginTop: 8,
-    fontFamily: fonts.sansRegular,
-    color: "#71717A",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
   },
   warningBanner: {
     borderRadius: 12,

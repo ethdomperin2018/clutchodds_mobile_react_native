@@ -30,7 +30,7 @@ export function isMlbGameWithinLivePredictionGrace(
   return nowMs - matchMs <= graceMs;
 }
 
-/** Show AI predictions for games today or tomorrow (ET). */
+/** Show AI predictions for today's ET slate (plus live grace after midnight). */
 export function isEligibleSportPredictionWindow(
   commenceTime: string,
   now = new Date()
@@ -42,7 +42,7 @@ export function isEligibleSportPredictionWindow(
   const todayDate = mlbMatchDateFromIso(now.toISOString());
   const daysUntil = calendarDaysBetween(todayDate, matchDate);
 
-  if (daysUntil >= 0 && daysUntil <= 1) return true;
+  if (daysUntil === 0) return true;
   if (
     daysUntil === -1 &&
     isMlbGameWithinLivePredictionGrace(commenceTime, now)

@@ -22,6 +22,7 @@ export function ValueBetsRefreshControls({
   onAutoRefreshChange,
   onRefresh,
   loading,
+  predictionsLoading = false,
   updatedAgoLabel,
   updatedToneStyle,
 }: {
@@ -33,6 +34,7 @@ export function ValueBetsRefreshControls({
   onAutoRefreshChange: (checked: boolean) => void;
   onRefresh: () => void;
   loading: boolean;
+  predictionsLoading?: boolean;
   updatedAgoLabel: string | null;
   updatedToneStyle?: object;
 }) {
@@ -115,6 +117,11 @@ export function ValueBetsRefreshControls({
           </View>
         ) : null}
         {loading ? <Text style={styles.fetching}>Fetching…</Text> : null}
+        {predictionsLoading ? (
+          <Text style={styles.predictionLoading}>
+            Loading Prediction Engine…
+          </Text>
+        ) : null}
       </View>
     </View>
   );
@@ -261,6 +268,11 @@ const styles = StyleSheet.create({
   fetching: {
     fontFamily: fonts.sansRegular,
     color: "#71717A",
+    fontSize: 12,
+  },
+  predictionLoading: {
+    fontFamily: fonts.sansRegular,
+    color: "#C4B5FD",
     fontSize: 12,
   },
 });

@@ -21,7 +21,7 @@ export function AboutModelPredictionsCard() {
         <Text style={styles.title}>About Model Predictions</Text>
       </View>
       <Text style={styles.copy}>
-        Our models generate win probabilities, confidence, and projected edges
+        Our models generate win probabilities, confidence, and model edge
         for upcoming MLB, NBA, NFL, and NHL moneylines before tip-off. Once a
         game is live, we still show that same pre-game prediction — it is not
         updated with in-game data.

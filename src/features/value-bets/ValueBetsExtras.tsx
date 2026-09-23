@@ -8,7 +8,7 @@ import {
   type TextStyle,
 } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
-import { openTelegramChannel } from "@/lib/openLinks";
+import { openTelegramValueBetsChannel } from "@/lib/openLinks";
 import { fonts } from "@/theme/typography";
 
 /** Demo numbers for Understanding Value Edge — same as web. */
@@ -103,7 +103,7 @@ function ValueBetAlertsCard() {
             Never miss high value opportunities, delivered to Telegram.
           </Text>
           <Pressable
-            onPress={() => void openTelegramChannel()}
+            onPress={() => void openTelegramValueBetsChannel()}
             style={({ pressed }) => [
               styles.telegramBtn,
               pressed ? styles.telegramBtnPressed : null,

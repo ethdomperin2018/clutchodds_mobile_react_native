@@ -91,7 +91,7 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="prediction"
+            name="model-predictions"
             options={{
               title: "Predictions",
               tabBarIcon: ({ color, size }) => (

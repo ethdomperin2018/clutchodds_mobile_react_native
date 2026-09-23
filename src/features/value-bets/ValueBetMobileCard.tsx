@@ -102,7 +102,6 @@ export function ValueBetMobileCard({
   ev,
   isLive,
   expanded,
-  oddsRefreshing,
   elite,
   insights,
   showEngineInsights,
@@ -121,7 +120,6 @@ export function ValueBetMobileCard({
   ev: number;
   isLive: boolean;
   expanded: boolean;
-  oddsRefreshing: boolean;
   elite: boolean;
   insights: PickEliteInsights;
   showEngineInsights: boolean;
@@ -181,11 +179,7 @@ export function ValueBetMobileCard({
           </Text>
         </View>
         <View style={styles.headerRight}>
-          {oddsRefreshing ? (
-            <ActivityIndicator color="#34D399" size="small" />
-          ) : (
-            <Text style={styles.evHeader}>{formatSignedPercent(ev)}</Text>
-          )}
+          <Text style={styles.evHeader}>{formatSignedPercent(ev)}</Text>
           <Pressable
             accessibilityLabel={expanded ? "Hide details" : "Show details"}
             onPress={onToggleExpand}
@@ -212,24 +206,18 @@ export function ValueBetMobileCard({
       </View>
 
       <View style={styles.valueBetBlock}>
-        {oddsRefreshing ? (
-          <ActivityIndicator color="#34D399" size="small" />
-        ) : (
-          <>
-            <View style={styles.valueBetTitleRow}>
-              <View style={styles.valueBetPill}>
-                <Text style={styles.valueBetPillText}>Value Bet</Text>
-              </View>
-              <Text style={styles.valueBetTeam}>
-                {shortTeamName(pick.teamName)}{" "}
-                <Text style={styles.valueBetOdds}>
-                  {formatAmerican(pick.bestLine.american)}
-                </Text>
-              </Text>
-            </View>
-            <Text style={styles.blurb}>{blurb}</Text>
-          </>
-        )}
+        <View style={styles.valueBetTitleRow}>
+          <View style={styles.valueBetPill}>
+            <Text style={styles.valueBetPillText}>Value Bet</Text>
+          </View>
+          <Text style={styles.valueBetTeam}>
+            {shortTeamName(pick.teamName)}{" "}
+            <Text style={styles.valueBetOdds}>
+              {formatAmerican(pick.bestLine.american)}
+            </Text>
+          </Text>
+        </View>
+        <Text style={styles.blurb}>{blurb}</Text>
       </View>
 
       <View style={styles.metricsCard}>
@@ -267,23 +255,19 @@ export function ValueBetMobileCard({
           <MetricSlot
             label="Best Book"
             primary={
-              oddsRefreshing ? (
-                <ActivityIndicator color="#34D399" size="small" />
-              ) : (
-                <View style={styles.bookRow}>
-                  <BookLogo
-                    bookKey={pick.bestLine.bookKey}
-                    bookTitle={pick.bestLine.bookTitle}
-                    size={16}
-                  />
-                  <Text numberOfLines={1} style={styles.bookTitle}>
-                    {pick.bestLine.bookTitle}
-                  </Text>
-                </View>
-              )
+              <View style={styles.bookRow}>
+                <BookLogo
+                  bookKey={pick.bestLine.bookKey}
+                  bookTitle={pick.bestLine.bookTitle}
+                  size={16}
+                />
+                <Text numberOfLines={1} style={styles.bookTitle}>
+                  {pick.bestLine.bookTitle}
+                </Text>
+              </View>
             }
             secondary={
-              !oddsRefreshing && limitCaption ? (
+              limitCaption ? (
                 <Text
                   numberOfLines={1}
                   style={[

@@ -123,7 +123,7 @@ function ArbitrageBoard() {
         ) : null}
 
         <View style={styles.summaryStrip}>
-          <SummaryCell label="Live Arbs" value={String(board.summary.liveCount)} />
+          <SummaryCell label="Live" value={String(board.summary.liveCount)} />
           <SummaryCell label="Upcoming" value={String(board.summary.upcomingCount)} />
           <SummaryCell label="Avg ROI" value={avgRoi} />
           <SummaryCell label="Profit" last value={profitPotential} />
@@ -301,8 +301,8 @@ function ArbitrageBoard() {
             <Text style={styles.loadingCopy}>Loading arbitrage data…</Text>
           </View>
         ) : (
-          <View style={[styles.boardShell, board.refreshing ? styles.boardShellRefreshing : null]}>
-            {board.refreshing ? (
+          <View style={[styles.boardShell, board.refreshing && listed.length > 0 ? styles.boardShellRefreshing : null]}>
+            {board.refreshing && listed.length > 0 ? (
               <View style={styles.refreshOverlay}>
                 <View style={styles.refreshChip}>
                   <ActivityIndicator color="#34D399" size="small" />
@@ -354,9 +354,16 @@ function ArbitrageBoard() {
               </View>
             </View>
 
-            {listed.length === 0 && !board.refreshing ? (
+            {listed.length === 0 ? (
               <View style={styles.emptyBox}>
-                <Text style={styles.emptyBoxText}>{board.emptyArbCopy}</Text>
+                {board.refreshing ? (
+                  <>
+                    <ActivityIndicator color="#34D399" />
+                    <Text style={styles.refreshChipText}>Refreshing…</Text>
+                  </>
+                ) : (
+                  <Text style={styles.emptyBoxText}>{board.emptyArbCopy}</Text>
+                )}
               </View>
             ) : (
               <View style={styles.list}>
@@ -1438,6 +1445,7 @@ const styles = StyleSheet.create({
     height: 152,
     justifyContent: "center",
     alignItems: "center",
+    gap: 10,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",

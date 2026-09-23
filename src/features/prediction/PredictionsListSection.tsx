@@ -1,5 +1,6 @@
 import { useRef, useState, type RefObject } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Modal,
   Pressable,
@@ -22,6 +23,7 @@ type MenuAnchor = { x: number; y: number; width: number; height: number };
 export function PredictionsListSection({
   rows,
   emptyMessage,
+  loadingMessage = null,
   nowMs,
   search,
   onSearchChange,
@@ -32,6 +34,8 @@ export function PredictionsListSection({
 }: {
   rows: ModelPredictionRow[];
   emptyMessage: string;
+  /** When set, keeps title/search/sort and shows this in the list body. */
+  loadingMessage?: string | null;
   nowMs: number;
   search: string;
   onSearchChange: (value: string) => void;
@@ -108,7 +112,12 @@ export function PredictionsListSection({
         </View>
       </View>
 
-      {rows.length === 0 ? (
+      {loadingMessage ? (
+        <View style={styles.empty}>
+          <ActivityIndicator color="#A78BFA" />
+          <Text style={styles.loadingCopy}>{loadingMessage}</Text>
+        </View>
+      ) : rows.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyCopy}>{emptyMessage}</Text>
         </View>
@@ -343,11 +352,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
+    gap: 10,
     overflow: "hidden",
   },
   emptyCopy: {
     fontFamily: fonts.sansRegular,
     color: "#A1A1AA",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  loadingCopy: {
+    fontFamily: fonts.sansRegular,
+    color: "#E4E4E7",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",

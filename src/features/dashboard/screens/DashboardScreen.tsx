@@ -731,7 +731,7 @@ export function DashboardScreen() {
         ? elite
           ? {
               label: "View all predictions →",
-              onPress: () => router.push("/(app)/(tabs)/prediction"),
+              onPress: () => router.push("/(app)/(tabs)/model-predictions"),
             }
           : {
               label: "Unlock Model Predictions →",
@@ -838,7 +838,13 @@ export function DashboardScreen() {
           </View>
 
           <View style={styles.oppBody}>
-            {oppTab === "arb" ? (
+            {loading ? (
+              <View style={styles.predictionSkeleton}>
+                {Array.from({ length: DASHBOARD_LINE_SHOP_LIMIT }).map((_, index) => (
+                  <View key={index} style={styles.skeletonRow} />
+                ))}
+              </View>
+            ) : oppTab === "arb" ? (
               <OppArbList arbs={bestArbs} resetKey={market?.fetchedAt} />
             ) : oppTab === "prediction" ? (
               elite ? (
@@ -982,7 +988,7 @@ export function DashboardScreen() {
             Icon={NavIconPrediction}
             badge="ELITE"
             desc="AI-powered pre-game win rankings"
-            href={"/(app)/(tabs)/prediction" as Href}
+            href={"/(app)/(tabs)/model-predictions" as Href}
             iconBg="rgba(139,92,246,0.15)"
             iconColor="#C4B5FD"
             title="Model Predictions"
@@ -1058,7 +1064,7 @@ export function DashboardScreen() {
           </View>
           <Pressable
             onPress={() => {
-              if (elite) router.push("/(app)/(tabs)/prediction");
+              if (elite) router.push("/(app)/(tabs)/model-predictions");
               else void openPricing("/dashboard");
             }}
             style={({ pressed }) => [

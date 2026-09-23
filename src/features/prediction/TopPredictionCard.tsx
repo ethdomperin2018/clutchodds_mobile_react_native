@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { TeamLogo } from "@/components/TeamLogo";
 import { PredictionMetricsBlock } from "@/features/prediction/PredictionMetricsBlock";
 import { formatKickoffWhen } from "@/features/prediction/predictionDisplay";
@@ -36,10 +36,22 @@ export function TopPredictionCard({
   );
 }
 
-export function TopPredictionEmpty({ message }: { message: string }) {
+export function TopPredictionEmpty({
+  message,
+  loading = false,
+}: {
+  message: string;
+  loading?: boolean;
+}) {
   return (
-    <View style={styles.empty}>
-      <Text style={styles.emptyCopy}>{message}</Text>
+    <View style={styles.card}>
+      <Text style={styles.eyebrow}>Top Prediction Right Now</Text>
+      <View style={styles.emptyBody}>
+        {loading ? <ActivityIndicator color="#A78BFA" /> : null}
+        <Text style={loading ? styles.loadingCopy : styles.emptyCopy}>
+          {message}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -88,20 +100,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
-  empty: {
-    height: 152,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(24,24,27,0.4)",
-    paddingHorizontal: 16,
+  emptyBody: {
+    marginTop: 16,
+    minHeight: 120,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    gap: 10,
+    paddingHorizontal: 8,
   },
   emptyCopy: {
     fontFamily: fonts.sansRegular,
     color: "#A1A1AA",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  loadingCopy: {
+    fontFamily: fonts.sansRegular,
+    color: "#E4E4E7",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",

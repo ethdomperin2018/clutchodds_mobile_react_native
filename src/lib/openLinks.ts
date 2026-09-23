@@ -1,8 +1,10 @@
+import { env } from "@/config/env";
 import * as WebBrowser from "expo-web-browser";
 import { Linking } from "react-native";
-import { env } from "@/config/env";
 
-export const TELEGRAM_CHANNEL_URL = "https://t.me/clutchoddarbs";
+export const TELEGRAM_CHANNEL_URL = "https://t.me/clutchoddsarb";
+export const TELEGRAM_VALUE_BETS_CHANNEL_URL =
+  "https://t.me/clutchodds_valuebets";
 
 export function getPricingUrl(returnTo = "/dashboard"): string {
   const path = `/?next=${encodeURIComponent(returnTo)}#pricing`;
@@ -15,6 +17,10 @@ export function openPricing(returnTo?: string) {
 
 export function openTelegramChannel() {
   return Linking.openURL(TELEGRAM_CHANNEL_URL);
+}
+
+export function openTelegramValueBetsChannel() {
+  return Linking.openURL(TELEGRAM_VALUE_BETS_CHANNEL_URL);
 }
 
 export function openWebPath(path: string) {

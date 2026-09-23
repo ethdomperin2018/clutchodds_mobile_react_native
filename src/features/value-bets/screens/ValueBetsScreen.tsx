@@ -250,15 +250,6 @@ function ProBoardShell({
     }
   }, [logConfirmPick, logConfirmKey, getStakeInput, board.logPick]);
 
-  if (!board.initialLoadComplete) {
-    return (
-      <View style={styles.boardShell}>
-        <ActivityIndicator color={colors.success} />
-        <Text style={styles.boardShellCopy}>Loading value bets…</Text>
-      </View>
-    );
-  }
-
   const emptyMessage = buildValueBetsEmptyCopy(board.viewTab);
 
   return (
@@ -273,6 +264,7 @@ function ProBoardShell({
         onLogStakeChange={board.setLogStake}
         onRefresh={() => void board.reload()}
         onRefreshIntervalChange={board.setRefreshIntervalSec}
+        predictionsLoading={elite && board.predictionsLoading}
         refreshIntervalSec={board.refreshIntervalSec}
         updatedAgoLabel={board.updatedAgoLabel}
         updatedToneStyle={freshnessStyle(board.updatedTone)}
@@ -353,7 +345,29 @@ function ProBoardShell({
         </Pressable>
       </View>
 
-      <View style={styles.boardListShell}>
+      {!board.initialLoadComplete ? (
+        <View style={styles.boardShell}>
+          <ActivityIndicator color={colors.success} />
+          <Text style={styles.boardShellCopy}>Loading value bets…</Text>
+        </View>
+      ) : (
+      <View
+        style={[
+          styles.boardListShell,
+          board.loading && listed.length > 0
+            ? styles.boardShellRefreshing
+            : null,
+        ]}
+      >
+        {board.loading && listed.length > 0 ? (
+          <View style={styles.refreshOverlay} pointerEvents="none">
+            <View style={styles.refreshChip}>
+              <ActivityIndicator color="#34D399" size="small" />
+              <Text style={styles.refreshChipText}>Refreshing…</Text>
+            </View>
+          </View>
+        ) : null}
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -391,19 +405,18 @@ function ProBoardShell({
 
         {listed.length === 0 ? (
           <View style={styles.listPlaceholder}>
-            <Text style={styles.boardShellCopy}>{emptyMessage}</Text>
+            {board.loading ? (
+              <>
+                <ActivityIndicator color="#34D399" />
+                <Text style={styles.refreshChipText}>Refreshing…</Text>
+              </>
+            ) : (
+              <Text style={styles.boardShellCopy}>{emptyMessage}</Text>
+            )}
           </View>
         ) : (
           <>
-          {elite && board.predictionsLoading ? (
-            <Text style={styles.predictionLoading}>
-              Loading Prediction Engine…
-            </Text>
-          ) : null}
-
-          <View
-            style={[styles.cardList, board.loading ? styles.cardListDim : null]}
-          >
+          <View style={styles.cardList}>
             {listed.map((pick, index) => {
               const key = pickKey(pick);
               const isLive =
@@ -415,6 +428,7 @@ function ProBoardShell({
               const eliteInsightsLoading =
                 elite &&
                 board.predictionsLoading &&
+                !showEngineInsights &&
                 isEnginePick(pick) &&
                 isEligibleSportPredictionWindow(
                   pick.commenceTime,
@@ -433,7 +447,6 @@ function ProBoardShell({
                   insights={insights}
                   isLive={isLive}
                   loggingPick={board.loggingPickKey === key}
-                  oddsRefreshing={board.loading}
                   pick={pick}
                   pickLogged={board.loggedPickKeys.has(key)}
                   rank={index + 1}
@@ -475,6 +488,7 @@ function ProBoardShell({
           </>
         )}
       </View>
+      )}
 
       <ValueBetsExtras />
 
@@ -889,11 +903,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 32,
     gap: 8,
-    alignItems: "flex-start",
+    alignItems: "center",
+    justifyContent: "center",
   },
   listPlaceholder: {
     height: 152,
     paddingHorizontal: 16,
+    gap: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -901,15 +917,39 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 10,
   },
-  cardListDim: {
-    opacity: 0.7,
-  },
   boardListShell: {
+    position: "relative",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     backgroundColor: "rgba(24,24,27,0.55)",
     overflow: "hidden",
+  },
+  boardShellRefreshing: {
+    opacity: 0.6,
+  },
+  refreshOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+    alignItems: "center",
+    paddingTop: 64,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  refreshChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(9,9,11,0.9)",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  refreshChipText: {
+    fontFamily: fonts.sansRegular,
+    color: "#E4E4E7",
+    fontSize: 14,
   },
   boardTabsScroll: {
     borderBottomWidth: 1,
@@ -945,15 +985,6 @@ const styles = StyleSheet.create({
   },
   boardTabUnderlineOn: {
     backgroundColor: colors.primary,
-  },
-  predictionLoading: {
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.06)",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontFamily: fonts.sansRegular,
-    color: "#C4B5FD",
-    fontSize: 12,
   },
   unlockEliteRow: {
     borderTopWidth: 1,

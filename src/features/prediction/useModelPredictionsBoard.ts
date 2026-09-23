@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
 import { oddsApi } from "@/lib/api/endpoints/odds";
 import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
@@ -122,6 +122,7 @@ export function useModelPredictionsBoard(options: {
   const [refreshIntervalSec, setRefreshIntervalSec] = useState(
     String(DEFAULT_ARB_UI_REFRESH_SEC)
   );
+  const loadSeqRef = useRef(0);
 
   const pollIntervalSec = useMemo(
     () => parseIntervalSec(refreshIntervalSec, DEFAULT_ARB_UI_REFRESH_SEC),
@@ -130,9 +131,13 @@ export function useModelPredictionsBoard(options: {
 
   const load = useCallback(async () => {
     if (!enabled) return;
+    const seq = ++loadSeqRef.current;
+    const isCurrent = () => loadSeqRef.current === seq;
+
     setLoading(true);
     try {
       const json = await oddsApi.getLightFeed(1000, 0);
+      if (!isCurrent()) return;
       if (json.error) {
         setError(json.error);
         setErrorCode(json.errorCode);
@@ -173,13 +178,30 @@ export function useModelPredictionsBoard(options: {
           userId,
           refresh,
           onCached: (cached) => {
+            if (!isCurrent()) return;
             if (Object.keys(cached).length > 0) {
-              setPredictions(cached);
+              // Merge — never replace the whole map with a partial cache hit set.
+              setPredictions((prev) => ({ ...prev, ...cached }));
+              // Refresh should reset "Updated Xs ago" as soon as the board can paint.
+              setLastUpdatedAt(Date.now());
+              // Board can paint from cache; don't keep the Refresh button spinning
+              // while the remaining prediction network fetch finishes.
+              setLoading(false);
+              setInitialLoadComplete(true);
             }
           },
         });
-        setPredictions(nextPredictions);
+        if (!isCurrent()) return;
+        setPredictions((prev) => {
+          const merged = { ...prev };
+          for (const [key, value] of Object.entries(nextPredictions)) {
+            if (value != null) merged[key] = value;
+            else if (!(key in merged)) merged[key] = null;
+          }
+          return merged;
+        });
       } catch (e) {
+        if (!isCurrent()) return;
         const message =
           e instanceof Error
             ? e.message
@@ -192,14 +214,17 @@ export function useModelPredictionsBoard(options: {
             : message
         );
       }
+      if (!isCurrent()) return;
       setLastUpdatedAt(Date.now());
     } catch (e) {
+      if (!isCurrent()) return;
       if (refresh && (await refreshAuthIfProDenied(e, refresh))) return;
       const message =
         e instanceof Error ? e.message : "Failed to load predictions";
       setError(message);
       setErrorCode(e instanceof ApiError ? e.code : undefined);
     } finally {
+      if (!isCurrent()) return;
       setLoading(false);
       setInitialLoadComplete(true);
     }
@@ -247,25 +272,7 @@ export function useModelPredictionsBoard(options: {
     });
   }, [sportScopedRows, minConfidence, minEdge]);
 
-  const emptyCopyInput = useMemo(
-    () => ({
-      allCount: allPredictionRows.length,
-      sportScopedCount: sportScopedRows.length,
-      filteredCount: filteredRows.length,
-      sportFilterActive: sportTab !== ALL_SPORTS,
-    }),
-    [
-      allPredictionRows.length,
-      sportScopedRows.length,
-      filteredRows.length,
-      sportTab,
-    ]
-  );
-
-  const featuredEmptyMessage = useMemo(
-    () => buildModelPredictionsFeaturedEmptyCopy(emptyCopyInput),
-    [emptyCopyInput]
-  );
+  const featuredEmptyMessage = buildModelPredictionsFeaturedEmptyCopy();
 
   const top = useMemo(
     () => pickTopModelPredictionRow(filteredRows),
@@ -309,11 +316,10 @@ export function useModelPredictionsBoard(options: {
   const listEmptyMessage = useMemo(
     () =>
       buildModelPredictionsListEmptyCopy({
-        ...emptyCopyInput,
         searchQuery: search,
         preSearchCount: rows.length,
       }),
-    [emptyCopyInput, search, rows.length]
+    [search, rows.length]
   );
 
   const updatedAgoLabel =

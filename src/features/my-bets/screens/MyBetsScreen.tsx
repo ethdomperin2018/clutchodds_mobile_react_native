@@ -12,7 +12,7 @@ import { fonts } from "@/theme/typography";
 export function MyBetsScreen() {
   const betsQuery = useQuery({
     queryKey: ["bets", "recent"],
-    queryFn: () => betsApi.list(20),
+    queryFn: () => betsApi.list(),
   });
 
   return (

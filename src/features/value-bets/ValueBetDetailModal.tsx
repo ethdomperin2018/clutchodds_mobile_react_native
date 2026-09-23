@@ -314,7 +314,6 @@ export function ValueBetDetailModal({
                   <SnapshotRow
                     label={`${shortTeamName(pick.teamName)} win prob`}
                     value={`${modelPct.toFixed(1)}%`}
-                    valueStyle={styles.diffPos}
                   />
                   <SnapshotRow
                     label={`${shortTeamName(opponent)} win prob`}
@@ -323,7 +322,7 @@ export function ValueBetDetailModal({
                   <Pressable
                     onPress={() => {
                       onClose();
-                      router.push("/(app)/(tabs)/prediction");
+                      router.push("/(app)/(tabs)/model-predictions");
                     }}
                     style={({ pressed }) => [
                       styles.predLink,
@@ -343,7 +342,7 @@ export function ValueBetDetailModal({
                   <Pressable
                     onPress={() => {
                       onClose();
-                      router.push("/(app)/(tabs)/prediction");
+                      router.push("/(app)/(tabs)/model-predictions");
                     }}
                     style={({ pressed }) => [
                       styles.predLink,
@@ -820,17 +819,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   expandBooksBtn: {
-    alignSelf: "flex-start",
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(56,189,248,0.35)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(9,9,11,0.6)",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   expandBooksText: {
     fontFamily: fonts.sansSemiBold,
-    color: "#7DD3FC",
-    fontSize: 12,
+    color: "#E4E4E7",
+    fontSize: 14,
   },
   booksList: {
     marginTop: 4,
