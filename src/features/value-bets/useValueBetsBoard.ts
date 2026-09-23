@@ -21,6 +21,7 @@ import { fetchEnginePredictionsWithCache } from "@/lib/predictions/fetchEnginePr
 import { lineShopPickToEnginePredictionInput } from "@/lib/predictions/rows";
 import type { SportPredictionLookupResult } from "@/lib/predictions/types";
 import { isEligibleSportPredictionWindow } from "@/lib/predictions/window";
+import { queryClient } from "@/lib/query/query-client";
 import {
   isEnginePick,
   resolvePickEliteInsights,
@@ -134,6 +135,11 @@ export function useValueBetsBoard(options: {
   const [loggedPickKeys, setLoggedPickKeys] = useState<Set<string>>(
     () => new Set()
   );
+  const [toast, setToast] = useState<{
+    message: string;
+    variant: "success" | "error" | "info";
+  } | null>(null);
+  const dismissToast = useCallback(() => setToast(null), []);
 
   const pollIntervalSec = useMemo(
     () => parseIntervalSec(refreshIntervalSec, DEFAULT_ARB_UI_REFRESH_SEC),
@@ -402,6 +408,7 @@ export function useValueBetsBoard(options: {
       if (loggingPickKey || loggedPickKeys.has(key)) return false;
 
       if (!Number.isFinite(stake) || stake <= 0) {
+        setToast({ message: "Enter a stake greater than $0.", variant: "error" });
         return false;
       }
 
@@ -409,14 +416,26 @@ export function useValueBetsBoard(options: {
       try {
         await betsApi.logFromLineShop(pick, stake);
         setLoggedPickKeys((prev) => new Set(prev).add(key));
-        router.push("/(app)/(tabs)/my-bets");
+        await queryClient.invalidateQueries({ queryKey: ["bets"] });
+        setToast({
+          message: "Pick logged — opening My Bets.",
+          variant: "success",
+        });
+        setTimeout(() => {
+          router.push("/(app)/(tabs)/my-bets");
+        }, 400);
         return true;
       } catch (e) {
-        const message = e instanceof Error ? e.message : "";
+        const message = e instanceof Error ? e.message : "Failed to log pick.";
         if (message.includes("already in your bet log")) {
           setLoggedPickKeys((prev) => new Set(prev).add(key));
+          setToast({
+            message: "Already logged — this pick is in My Bets.",
+            variant: "info",
+          });
           return true;
         }
+        setToast({ message, variant: "error" });
         throw e;
       } finally {
         setLoggingPickKey(null);
@@ -472,6 +491,8 @@ export function useValueBetsBoard(options: {
     logPick,
     loggingPickKey,
     loggedPickKeys,
+    toast,
+    dismissToast,
     primaryEvPercent,
   };
 }

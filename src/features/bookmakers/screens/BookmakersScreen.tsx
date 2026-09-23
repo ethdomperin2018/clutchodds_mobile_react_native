@@ -49,9 +49,9 @@ function BookmakerSection({
           const name = getBookDisplayName(key);
           return (
             <View key={key} style={styles.cell}>
-              <View style={styles.row}>
-                <BookLogo bookKey={key} bookTitle={name} size={32} />
-                <Text numberOfLines={1} style={styles.rowTitle}>
+              <View style={styles.card} accessibilityLabel={name}>
+                <BookLogo bookKey={key} bookTitle={name} size={20} />
+                <Text numberOfLines={2} style={styles.cardTitle}>
                   {name}
                 </Text>
               </View>
@@ -82,28 +82,29 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginHorizontal: -6,
+    marginHorizontal: -4,
   },
   cell: {
-    width: "50%",
-    paddingHorizontal: 6,
-    marginBottom: 12,
+    width: "33.333%",
+    paddingHorizontal: 4,
+    marginBottom: 8,
   },
-  row: {
-    flexDirection: "row",
+  card: {
     alignItems: "center",
-    gap: 10,
-    borderRadius: 12,
+    gap: 4,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     backgroundColor: "#161616",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
   },
-  rowTitle: {
-    flex: 1,
+  cardTitle: {
+    width: "100%",
     fontFamily: fonts.sansMedium,
     color: "#E4E4E7",
-    fontSize: 13,
+    fontSize: 10,
+    lineHeight: 12,
+    textAlign: "center",
   },
 });

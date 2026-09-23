@@ -15,6 +15,7 @@ import {
   NavIconBookmakers,
   NavIconMyBets,
   NavIconProfile,
+  NavIconSettings,
 } from "@/components/icons/appNavIcons";
 import { colors, radii } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -40,6 +41,11 @@ const MENU_ITEMS: MenuItem[] = [
     href: "/(app)/(tabs)/profile" as Href,
     label: "Profile",
     Icon: NavIconProfile,
+  },
+  {
+    href: "/(app)/(tabs)/settings" as Href,
+    label: "Settings",
+    Icon: NavIconSettings,
   },
 ];
 

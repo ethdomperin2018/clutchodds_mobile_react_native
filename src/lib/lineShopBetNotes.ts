@@ -1,6 +1,7 @@
 /** Mirrors web `lib/db/lineShopBetNotes` for P/L calc parity. */
 
 export const LINE_SHOP_NOTE_PREFIX = "lineShop:";
+export const LINE_SHOP_PLACEHOLDER_BOOK_KEY = "line_shop_single";
 
 export type ParsedLineShopBetNote = {
   eventId: string;
@@ -28,4 +29,8 @@ export function parseLineShopFromNotes(
     side,
     edgePercent: Number.isFinite(edgePercent) ? edgePercent : null,
   };
+}
+
+export function isLineShopPlaceholderLeg(leg: { bookKey?: string }): boolean {
+  return leg.bookKey === LINE_SHOP_PLACEHOLDER_BOOK_KEY;
 }

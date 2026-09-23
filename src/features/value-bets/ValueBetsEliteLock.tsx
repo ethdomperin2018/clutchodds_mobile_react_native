@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { openPricing } from "@/lib/openLinks";
+import { getPredictionUnavailableCopy } from "@/lib/valueBets/predictionFieldLabels";
 import { fonts } from "@/theme/typography";
 
 /** Compact Elite lock — matches web `ValueBetsEliteLock` compact. */
@@ -25,9 +26,30 @@ export function ValueBetsEliteBadge() {
   );
 }
 
-/** Elite user without a visible prediction — same “—” as web. */
-export function ValueBetsEliteUnavailable() {
-  return <Text style={styles.unavailable}>—</Text>;
+/** Elite user without a visible prediction — short status for Fair Odds / Confidence. */
+export function ValueBetsEliteUnavailable({
+  commenceTime,
+  nowMs,
+}: {
+  commenceTime?: string;
+  nowMs?: number;
+}) {
+  const copy =
+    commenceTime != null
+      ? getPredictionUnavailableCopy(
+          commenceTime,
+          nowMs != null ? new Date(nowMs) : new Date()
+        )
+      : {
+          short: "Not available yet",
+          headline: "Prediction not available yet.",
+        };
+
+  return (
+    <Text numberOfLines={2} style={styles.unavailable}>
+      {copy.short}
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -53,9 +75,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   unavailable: {
-    fontFamily: fonts.sansRegular,
-    color: "#71717A",
-    fontSize: 12,
+    fontFamily: fonts.sansMedium,
+    color: "#A1A1AA",
+    fontSize: 10,
+    lineHeight: 13,
     textAlign: "center",
   },
   badge: {

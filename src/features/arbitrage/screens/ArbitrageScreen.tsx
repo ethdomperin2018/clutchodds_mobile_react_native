@@ -1748,7 +1748,7 @@ const styles = StyleSheet.create({
     bottom: 16,
     left: 16,
     zIndex: 50,
-    alignItems: "flex-end",
+    alignItems: "center",
   },
   toastCard: {
     maxWidth: 360,

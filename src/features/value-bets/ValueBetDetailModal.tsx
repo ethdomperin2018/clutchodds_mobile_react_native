@@ -31,8 +31,19 @@ import {
   valueBetTableBlurb,
   valueBetWhyBullets,
 } from "@/lib/valueBets/valueBetCopy";
+import { getPredictionUnavailableCopy } from "@/lib/valueBets/predictionFieldLabels";
 import { shortTeamName } from "@/lib/teamDisplay";
 import { fonts } from "@/theme/typography";
+
+function eliteInsightFallbackCopy(
+  elite: boolean,
+  commenceTime: string,
+  nowMs: number,
+  unlockMessage: string
+): string {
+  if (!elite) return unlockMessage;
+  return getPredictionUnavailableCopy(commenceTime, new Date(nowMs)).headline;
+}
 
 /**
  * Mobile details dialog — mirrors web `ValueBetDetailPanel` layout="modal".
@@ -217,7 +228,12 @@ export function ValueBetDetailModal({
                 </View>
               ) : (
                 <Text style={styles.muted}>
-                  Elite unlocks model vs market probability comparison.
+                  {eliteInsightFallbackCopy(
+                    elite,
+                    pick.commenceTime,
+                    nowMs,
+                    "Elite unlocks model vs market probability comparison."
+                  )}
                 </Text>
               )}
             </View>
@@ -301,6 +317,7 @@ export function ValueBetDetailModal({
                       <Text style={styles.openBookText}>
                         Open {pick.bestLine.bookTitle}
                       </Text>
+                      <Text style={styles.openBookArrow}>↗</Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -337,7 +354,12 @@ export function ValueBetDetailModal({
               ) : (
                 <View style={styles.snapshotBlock}>
                   <Text style={styles.muted}>
-                    Elite unlocks the model snapshot for this matchup.
+                    {eliteInsightFallbackCopy(
+                      elite,
+                      pick.commenceTime,
+                      nowMs,
+                      "Elite unlocks the model snapshot for this matchup."
+                    )}
                   </Text>
                   <Pressable
                     onPress={() => {
@@ -789,6 +811,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansSemiBold,
     color: "#E4E4E7",
     fontSize: 12,
+  },
+  openBookArrow: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#E4E4E7",
+    fontSize: 10,
+    opacity: 0.8,
   },
   snapshotBlock: {
     gap: 8,

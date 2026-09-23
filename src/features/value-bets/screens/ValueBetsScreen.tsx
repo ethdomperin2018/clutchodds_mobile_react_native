@@ -447,6 +447,7 @@ function ProBoardShell({
                   insights={insights}
                   isLive={isLive}
                   loggingPick={board.loggingPickKey === key}
+                  nowMs={board.nowMs}
                   pick={pick}
                   pickLogged={board.loggedPickKeys.has(key)}
                   rank={index + 1}
@@ -545,6 +546,66 @@ function ProBoardShell({
         onClose={closeLogConfirm}
         onConfirm={confirmLogPick}
       />
+
+      {board.toast ? (
+        <ToastBanner
+          message={board.toast.message}
+          variant={board.toast.variant}
+          onDismiss={board.dismissToast}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function ToastBanner({
+  message,
+  variant,
+  onDismiss,
+}: {
+  message: string;
+  variant: "success" | "error" | "info";
+  onDismiss: () => void;
+}) {
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 4000);
+    return () => clearTimeout(timer);
+  }, [message, variant, onDismiss]);
+
+  const tone =
+    variant === "success"
+      ? {
+          border: "rgba(6,95,70,0.5)",
+          bg: "rgba(2,44,34,0.95)",
+          icon: "#34D399",
+          mark: "✓",
+        }
+      : variant === "error"
+        ? {
+            border: "rgba(127,29,29,0.5)",
+            bg: "rgba(69,10,10,0.95)",
+            icon: "#F87171",
+            mark: "!",
+          }
+        : {
+            border: "rgba(255,255,255,0.1)",
+            bg: "rgba(24,24,27,0.95)",
+            icon: "#D4D4D8",
+            mark: "i",
+          };
+
+  return (
+    <View pointerEvents="box-none" style={styles.toastWrap}>
+      <Pressable
+        onPress={onDismiss}
+        style={[
+          styles.toastCard,
+          { borderColor: tone.border, backgroundColor: tone.bg },
+        ]}
+      >
+        <Text style={[styles.toastMark, { color: tone.icon }]}>{tone.mark}</Text>
+        <Text style={styles.toastMessage}>{message}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -600,7 +661,8 @@ function LogPickConfirmModal({
               <Text style={styles.confirmCopy}>
                 Add{" "}
                 <Text style={styles.confirmStrong}>
-                  {team} {odds}
+                  {team}{" "}
+                  <Text style={styles.confirmOdds}>{odds}</Text>
                 </Text>{" "}
                 (<Text style={styles.confirmStrong}>{matchup}</Text>) to My
                 Bets with a{" "}
@@ -1116,6 +1178,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansSemiBold,
     color: "#E4E4E7",
   },
+  confirmOdds: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#34D399",
+  },
   confirmError: {
     fontFamily: fonts.sansRegular,
     color: "#F87171",
@@ -1152,5 +1218,38 @@ const styles = StyleSheet.create({
   },
   confirmDisabled: {
     opacity: 0.55,
+  },
+  toastWrap: {
+    position: "absolute",
+    right: 16,
+    bottom: 16,
+    left: 16,
+    zIndex: 50,
+    alignItems: "center",
+  },
+  toastCard: {
+    maxWidth: 360,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  toastMark: {
+    fontFamily: fonts.sansBold,
+    fontSize: 12,
+    lineHeight: 20,
+    width: 20,
+    textAlign: "center",
+  },
+  toastMessage: {
+    flex: 1,
+    fontFamily: fonts.sansRegular,
+    color: "#F4F4F5",
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

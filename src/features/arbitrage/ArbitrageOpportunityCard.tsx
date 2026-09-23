@@ -405,7 +405,13 @@ export function ArbitrageOpportunityCard({
                             onPress={() => void Linking.openURL(url)}
                             style={styles.openBtn}
                           >
+                            <BookLogo
+                              bookKey={leg.bookKey}
+                              bookTitle={leg.bookTitle}
+                              size={14}
+                            />
                             <Text style={styles.openBtnText}>Open</Text>
+                            <Text style={styles.openBtnArrow}>↗</Text>
                           </Pressable>
                         ) : null}
                       </View>
@@ -1373,6 +1379,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   openBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(16,185,129,0.3)",
@@ -1384,6 +1393,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansSemiBold,
     color: "#A7F3D0",
     fontSize: 11,
+  },
+  openBtnArrow: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#A7F3D0",
+    fontSize: 10,
+    opacity: 0.8,
   },
   manualCard: {
     overflow: "hidden",

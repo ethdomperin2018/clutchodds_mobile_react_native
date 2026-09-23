@@ -79,14 +79,18 @@ function MetricSlot({
 }: {
   label: string;
   primary: ReactNode;
-  secondary?: ReactNode;
+  secondary?: ReactNode | null;
 }) {
   return (
     <View style={styles.metricSlot}>
       <Text style={styles.metricLabel}>{label}</Text>
       <View style={styles.metricPrimary}>{primary}</View>
       <View style={styles.metricSecondary}>
-        {secondary ?? <Text style={styles.metricGhost}>—</Text>}
+        {secondary !== undefined ? (
+          secondary
+        ) : (
+          <Text style={styles.metricGhost}>—</Text>
+        )}
       </View>
     </View>
   );
@@ -106,6 +110,7 @@ export function ValueBetMobileCard({
   insights,
   showEngineInsights,
   eliteInsightsLoading,
+  nowMs,
   stake,
   stakeInput,
   onStakeChange,
@@ -124,6 +129,7 @@ export function ValueBetMobileCard({
   insights: PickEliteInsights;
   showEngineInsights: boolean;
   eliteInsightsLoading: boolean;
+  nowMs: number;
   stake?: number;
   stakeInput: string;
   onStakeChange: (value: string) => void;
@@ -240,7 +246,10 @@ export function ValueBetMobileCard({
                   )}
                 </Text>
               ) : (
-                <ValueBetsEliteUnavailable />
+                <ValueBetsEliteUnavailable
+                  commenceTime={pick.commenceTime}
+                  nowMs={nowMs}
+                />
               )
             }
             secondary={
@@ -248,6 +257,8 @@ export function ValueBetMobileCard({
                 <Text style={styles.metricSub}>
                   {insights.modelWinProbability.toFixed(1)}%
                 </Text>
+              ) : elite && !eliteInsightsLoading && !showEngineInsights ? (
+                null
               ) : undefined
             }
           />
@@ -296,7 +307,10 @@ export function ValueBetMobileCard({
                   size="sm"
                 />
               ) : (
-                <ValueBetsEliteUnavailable />
+                <ValueBetsEliteUnavailable
+                  commenceTime={pick.commenceTime}
+                  nowMs={nowMs}
+                />
               )
             }
             secondary={
@@ -304,6 +318,8 @@ export function ValueBetMobileCard({
                 <Text style={styles.metricSub}>
                   {displayConfidenceShortLabel(insights.confidenceScore)}
                 </Text>
+              ) : elite && !eliteInsightsLoading && !showEngineInsights ? (
+                null
               ) : undefined
             }
           />

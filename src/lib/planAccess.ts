@@ -22,3 +22,9 @@ export function isEliteUser(user: AuthUser | null | undefined): boolean {
     hasPaidAccessStatus(user.subscriptionStatus) && user.plan === "elite"
   );
 }
+
+/** Paid Pro (not Elite) — eligible for Elite upgrade. */
+export function isProOnlyUser(user: AuthUser): boolean {
+  if (user.isAdmin) return false;
+  return hasPaidAccessStatus(user.subscriptionStatus) && user.plan === "pro";
+}

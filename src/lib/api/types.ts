@@ -62,16 +62,27 @@ export type PublicLineShopTeaser = {
   confidenceScore: number;
 };
 
+export type ManualBetLeg = {
+  bookKey?: string;
+  bookTitle: string;
+  teamName: string;
+  american: number;
+  stake: number;
+};
+
+export type ManualBetResult = "pending" | "won" | "lost" | "push" | "partial";
+
 export type ManualBetRow = {
   id: string;
+  betDate: string;
+  matchup: string;
+  sportKey: string | null;
+  legA: ManualBetLeg;
+  legB: ManualBetLeg;
   expectedProfit: number | null;
-  result: "pending" | "won" | "lost" | "push" | "partial";
-  createdAt: string;
+  result: ManualBetResult;
   notes: string | null;
-  sportKey?: string | null;
-  matchup?: string;
-  legA: { bookTitle: string; stake: number; american: number };
-  legB: { bookTitle: string; stake: number; american: number };
+  createdAt?: string;
 };
 
 export type BetsResponse = {
