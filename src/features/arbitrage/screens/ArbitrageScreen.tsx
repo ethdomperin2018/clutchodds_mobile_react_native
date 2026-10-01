@@ -32,7 +32,8 @@ import {
   TRACKED_BOOKMAKER_KEYS,
   getBookDisplayName,
 } from "@/lib/bookmakerDisplay";
-import { openPricing, openTelegramChannel, openWebPath } from "@/lib/openLinks";
+import { openPricing, openTelegramChannel } from "@/lib/openLinks";
+import { openManageSubscription } from "@/lib/billing/manageSubscription";
 import { isProUser } from "@/lib/planAccess";
 import {
   getLapsedPrimaryActionLabel,
@@ -605,11 +606,7 @@ function ProUpgradeCard({ user }: { user: AuthUser | null }) {
 
   function onPrimary() {
     if (paymentFailed) {
-      void openWebPath("/settings?billing=update");
-      return;
-    }
-    if (lapsed) {
-      void openWebPath("/settings");
+      if (user) void openManageSubscription(user, "settings");
       return;
     }
     void openPricing("/arbitrage");

@@ -41,6 +41,11 @@ export const authApi = {
     apiRequest<{ success?: boolean; ok?: boolean }>("/api/auth/logout", {
       method: "POST",
     }),
+  deleteAccount: (email: string) =>
+    apiRequest<{ ok?: boolean }>("/api/account/delete", {
+      method: "POST",
+      body: { confirm: true, email },
+    }),
   googleToken: (idToken: string) =>
     apiRequest<AuthResponse>("/api/auth/google/token", {
       method: "POST",

@@ -15,7 +15,8 @@ import {
   getAccountStatusLabel,
   isAccountActive,
 } from "@/lib/accountStatus";
-import { openPricing, openWebPath } from "@/lib/openLinks";
+import { openPricing } from "@/lib/openLinks";
+import { openManageSubscription } from "@/lib/billing/manageSubscription";
 import { isProUser } from "@/lib/planAccess";
 import {
   formatMediumDate,
@@ -178,11 +179,7 @@ function ProfileActions({
 
   const openBilling = () => {
     if (needsPaymentUpdate(user)) {
-      void openWebPath("/settings?billing=update");
-      return;
-    }
-    if (lapsed) {
-      void openWebPath("/settings");
+      void openManageSubscription(user, "settings");
       return;
     }
     void openPricing("/profile");

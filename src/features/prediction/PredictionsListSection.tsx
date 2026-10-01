@@ -15,7 +15,7 @@ import {
   PREDICTION_SORT_OPTIONS,
   type PredictionSortKey,
 } from "@/features/prediction/useModelPredictionsBoard";
-import type { ModelPredictionRow } from "@/lib/modelPredictions/modelPredictionRows";
+import type { PredictionHistoryRow } from "@/lib/predictions/history";
 import { fonts } from "@/theme/typography";
 
 type MenuAnchor = { x: number; y: number; width: number; height: number };
@@ -32,7 +32,7 @@ export function PredictionsListSection({
   onSortChange,
   onToggleSortDir,
 }: {
-  rows: ModelPredictionRow[];
+  rows: PredictionHistoryRow[];
   emptyMessage: string;
   /** When set, keeps title/search/sort and shows this in the list body. */
   loadingMessage?: string | null;
@@ -125,7 +125,7 @@ export function PredictionsListSection({
         <View style={styles.list}>
           {rows.map((row) => (
             <PredictionListCard
-              key={row.pick.eventId}
+              key={row.id}
               nowMs={nowMs}
               row={row}
             />

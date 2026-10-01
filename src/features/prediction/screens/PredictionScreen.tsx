@@ -17,7 +17,7 @@ import {
   ModelPredictionsBoardUiProvider,
   useModelPredictionsBoardUi,
 } from "@/features/prediction/ModelPredictionsBoardUiContext";
-import { PredictionRefreshControls } from "@/features/prediction/PredictionRefreshControls";
+import { PredictionDateCard } from "@/features/prediction/PredictionDateCard";
 import { PredictionSportTabs } from "@/features/prediction/PredictionSportTabs";
 import {
   TopPredictionCard,
@@ -26,10 +26,7 @@ import {
 import { PredictionsListSection } from "@/features/prediction/PredictionsListSection";
 import { AboutModelPredictionsCard } from "@/features/prediction/AboutModelPredictionsCard";
 import { ModelPredictionsFiltersModal } from "@/features/prediction/ModelPredictionsFiltersModal";
-import {
-  useModelPredictionsBoard,
-  type FreshnessTone,
-} from "@/features/prediction/useModelPredictionsBoard";
+import { useModelPredictionsBoard } from "@/features/prediction/useModelPredictionsBoard";
 import { isAccountActive } from "@/lib/accountStatus";
 import { getPlanPriceLabel } from "@/lib/billing/plans";
 import { openPricing } from "@/lib/openLinks";
@@ -42,7 +39,7 @@ const PAGE_SUBTITLE =
   "AI-powered pre-game win probability, confidence, and model edge.";
 
 export function PredictionScreen() {
-  const { user, ready, refresh } = useSession();
+  const { user, ready } = useSession();
 
   if (!ready) {
     return (
@@ -54,17 +51,15 @@ export function PredictionScreen() {
 
   return (
     <ModelPredictionsBoardUiProvider>
-      <PredictionScreenBody refresh={refresh} user={user} />
+      <PredictionScreenBody user={user} />
     </ModelPredictionsBoardUiProvider>
   );
 }
 
 function PredictionScreenBody({
   user,
-  refresh,
 }: {
   user: AuthUser | null;
-  refresh: () => Promise<AuthUser | null>;
 }) {
   const elite = isEliteUser(user);
   const pro = isProUser(user);
@@ -72,9 +67,7 @@ function PredictionScreenBody({
   const { filtersOpen, setFiltersOpen, setActiveFilterCount } =
     useModelPredictionsBoardUi();
   const board = useModelPredictionsBoard({
-    userId: user?.id ?? null,
     enabled: elite && accountActive,
-    refresh,
   });
   const openFilters = useCallback(
     () => setFiltersOpen(true),
@@ -121,21 +114,13 @@ function PredictionScreenBody({
   );
 }
 
-/** Step 4: refresh chrome wired; sport tabs / cards next. */
 function EliteBoardShell({
   board,
 }: {
   board: ReturnType<typeof useModelPredictionsBoard>;
 }) {
-  const showUpdated = Boolean(board.updatedAgoLabel) || board.loading;
-  const refreshing = board.loading && board.initialLoadComplete;
-  const hasVisibleData = board.top != null || board.searched.length > 0;
-  const showRefreshOverlay = refreshing && hasVisibleData;
-  const showFeaturedPlaceholder = board.loading && !board.top;
-  const showListPlaceholder = board.loading && board.searched.length === 0;
-  const contentLoadingMessage = !board.initialLoadComplete
-    ? "Loading model predictions…"
-    : "Refreshing…";
+  const showPlaceholder = board.loading;
+  const contentLoadingMessage = "Loading model predictions…";
 
   return (
     <View style={styles.boardStack}>
@@ -143,85 +128,46 @@ function EliteBoardShell({
         <OddsApiErrorBanner
           error={board.error}
           errorCode={board.errorCode}
-          errorTitle={board.errorTitle}
         />
       ) : null}
 
-      {board.predictionsWarning ? (
-        <View style={styles.warningBanner}>
-          <Text style={styles.warningText}>{board.predictionsWarning}</Text>
-        </View>
-      ) : null}
-
-      <View style={styles.refreshBlock}>
-        {showUpdated ? (
-          <Text style={styles.updatedLine}>
-            {board.updatedAgoLabel ? (
-              <>
-                Updated{" "}
-                <Text style={freshnessStyle(board.updatedTone)}>
-                  {board.updatedAgoLabel}
-                </Text>
-                {board.autoRefresh ? (
-                  <Text style={styles.updatedEvery}>
-                    {" "}
-                    · every {board.pollIntervalSec}s
-                  </Text>
-                ) : null}
-              </>
-            ) : null}
-            {board.loading ? (
-              <Text>
-                {board.updatedAgoLabel ? "  " : ""}
-                Fetching…
-              </Text>
-            ) : null}
-          </Text>
-        ) : null}
-
-        <PredictionRefreshControls
-          autoRefresh={board.autoRefresh}
-          loading={board.loading}
-          onAutoRefreshChange={board.setAutoRefresh}
-          onRefresh={() => void board.reload()}
-          onRefreshIntervalChange={board.setRefreshIntervalSec}
-          refreshIntervalSec={board.refreshIntervalSec}
-        />
-      </View>
+      <PredictionDateCard
+        date={board.slateDate}
+        loading={board.loading}
+        onChange={board.setSlateDate}
+        onStep={board.stepSlateDate}
+        record={board.visibleRecord}
+        today={board.today}
+      />
 
       <PredictionSportTabs
         active={board.sportTab}
         onChange={board.setSportTab}
       />
 
-      <View
-        style={[
-          styles.boardContent,
-          showRefreshOverlay ? styles.boardContentRefreshing : null,
-        ]}
-      >
-        {showRefreshOverlay ? (
-          <View style={styles.refreshOverlay} pointerEvents="none">
-            <View style={styles.refreshChip}>
-              <ActivityIndicator color="#A78BFA" size="small" />
-              <Text style={styles.refreshChipText}>Refreshing…</Text>
-            </View>
-          </View>
-        ) : null}
-
-        {showFeaturedPlaceholder ? (
-          <TopPredictionEmpty loading message={contentLoadingMessage} />
+      <View style={styles.boardContent}>
+        {showPlaceholder ? (
+          <TopPredictionEmpty
+            loading
+            message={contentLoadingMessage}
+            title={board.featuredTitle}
+          />
         ) : board.top ? (
-          <TopPredictionCard nowMs={board.nowMs} row={board.top} />
+          <TopPredictionCard
+            nowMs={board.nowMs}
+            row={board.top}
+            title={board.featuredTitle}
+          />
         ) : (
-          <TopPredictionEmpty message={board.featuredEmptyMessage} />
+          <TopPredictionEmpty
+            message={board.featuredEmptyMessage}
+            title={board.featuredTitle}
+          />
         )}
 
         <PredictionsListSection
           emptyMessage={board.listEmptyMessage}
-          loadingMessage={
-            showListPlaceholder ? contentLoadingMessage : null
-          }
+          loadingMessage={showPlaceholder ? contentLoadingMessage : null}
           nowMs={board.nowMs}
           onSearchChange={board.setSearch}
           onSortChange={board.setSortKey}
@@ -236,13 +182,6 @@ function EliteBoardShell({
       <AboutModelPredictionsCard />
     </View>
   );
-}
-
-function freshnessStyle(tone: FreshnessTone) {
-  if (tone === "fresh") return styles.updatedFresh;
-  if (tone === "warm") return styles.updatedWarm;
-  if (tone === "stale") return styles.updatedStale;
-  return styles.updatedIdle;
 }
 
 function Header({
@@ -421,71 +360,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   boardContent: {
-    position: "relative",
     gap: 12,
-  },
-  boardContentRefreshing: {
-    opacity: 0.6,
-  },
-  refreshOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 10,
-    alignItems: "center",
-    paddingTop: 64,
-    backgroundColor: "rgba(0,0,0,0.35)",
-  },
-  refreshChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    backgroundColor: "rgba(9,9,11,0.9)",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  refreshChipText: {
-    fontFamily: fonts.sansRegular,
-    color: "#E4E4E7",
-    fontSize: 14,
-  },
-  refreshBlock: {
-    gap: 8,
-  },
-  updatedLine: {
-    fontFamily: fonts.sansRegular,
-    color: "#A1A1AA",
-    fontSize: 12,
-  },
-  updatedEvery: {
-    color: "#52525B",
-  },
-  updatedFresh: {
-    color: "#34D399",
-  },
-  updatedWarm: {
-    color: "#FCD34D",
-  },
-  updatedStale: {
-    color: "#F87171",
-  },
-  updatedIdle: {
-    color: "#A1A1AA",
-  },
-  warningBanner: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(251,191,36,0.35)",
-    backgroundColor: "rgba(251,191,36,0.08)",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  warningText: {
-    fontFamily: fonts.sansRegular,
-    color: "#FCD34D",
-    fontSize: 13,
-    lineHeight: 18,
   },
   disclaimer: {
     fontFamily: fonts.sansRegular,

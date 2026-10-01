@@ -34,7 +34,8 @@ import { buildValueBetsEmptyCopy } from "@/lib/valueBets/emptyCopy";
 import { isAccountActive } from "@/lib/accountStatus";
 import { formatAmerican } from "@/lib/format";
 import { lineShopPickLogKey } from "@/lib/lineShopBetNotes";
-import { openPricing, openWebPath } from "@/lib/openLinks";
+import { openPricing } from "@/lib/openLinks";
+import { openManageSubscription } from "@/lib/billing/manageSubscription";
 import { isEliteUser, isProUser } from "@/lib/planAccess";
 import { isEligibleSportPredictionWindow } from "@/lib/predictions/window";
 import {
@@ -767,11 +768,7 @@ function ProUpgradeCard({ user }: { user: AuthUser | null }) {
 
   function onPrimary() {
     if (paymentFailed) {
-      void openWebPath("/settings?billing=update");
-      return;
-    }
-    if (lapsed) {
-      void openWebPath("/settings");
+      if (user) void openManageSubscription(user, "settings");
       return;
     }
     void openPricing("/value-bets");

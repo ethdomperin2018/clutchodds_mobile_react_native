@@ -1,31 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
-import { oddsApi } from "@/lib/api/endpoints/odds";
-import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
+import { predictionsApi } from "@/lib/api/endpoints/predictions";
+import { buildModelPredictionsListEmptyCopy } from "@/lib/modelPredictions/emptyCopy";
 import {
-  buildModelPredictionRows,
-  compareModelPredictionRowsByTop,
-  pickTopModelPredictionRow,
-  uniqueEngineEventsForPredictionFetch,
-  type ModelPredictionRow,
-} from "@/lib/modelPredictions/modelPredictionRows";
-import {
-  buildModelPredictionsFeaturedEmptyCopy,
-  buildModelPredictionsListEmptyCopy,
-} from "@/lib/modelPredictions/emptyCopy";
-import { fetchEnginePredictionsWithCache } from "@/lib/predictions/fetchEnginePredictions";
-import {
-  lineShopPickToEnginePredictionInput,
-} from "@/lib/predictions/rows";
-import type { SportPredictionLookupResult } from "@/lib/predictions/types";
-import { isEligibleSportPredictionWindow } from "@/lib/predictions/window";
-import {
-  DEFAULT_ARB_UI_REFRESH_SEC,
-  parseIntervalSec,
-} from "@/lib/odds/refreshInterval";
-import type { LineShopPick } from "@/lib/odds/types";
-import { isEnginePick } from "@/lib/valueBets/engineEliteInsights";
-import type { AuthUser } from "@/types/auth";
+  predictionSlateToday,
+  shiftSlateDate,
+  summarizePredictionRecord,
+  type PredictionHistoryRecord,
+  type PredictionHistoryRow,
+} from "@/lib/predictions/history";
 import {
   displayConfidenceScore,
   meetsMinConfidence,
@@ -73,43 +56,35 @@ export function defaultSortDirForKey(
   return key === "start" ? "asc" : "desc";
 }
 
-function formatUpdatedAgo(ms: number): string {
-  const sec = Math.max(0, Math.floor(ms / 1000));
-  if (sec === 0) return "just now";
-  if (sec === 1) return "1 second ago";
-  if (sec < 60) return `${sec} seconds ago`;
-  const min = Math.floor(sec / 60);
-  return min === 1 ? "1 minute ago" : `${min} minutes ago`;
+function comparePredictionRows(
+  a: PredictionHistoryRow,
+  b: PredictionHistoryRow
+): number {
+  if (a.winProb !== b.winProb) return b.winProb - a.winProb;
+  const confA = displayConfidenceScore(a.confidenceScore);
+  const confB = displayConfidenceScore(b.confidenceScore);
+  if (confA !== confB) return confB - confA;
+  return (b.modelEdge ?? -Infinity) - (a.modelEdge ?? -Infinity);
 }
 
-export type FreshnessTone = "fresh" | "warm" | "stale" | "idle";
+const EMPTY_RECORD: PredictionHistoryRecord = {
+  wins: 0,
+  losses: 0,
+  pushes: 0,
+  pending: 0,
+  winRate: null,
+};
 
-export function freshnessTone(ms: number): FreshnessTone {
-  const sec = Math.max(0, Math.floor(ms / 1000));
-  if (sec <= 10) return "fresh";
-  if (sec <= 30) return "warm";
-  return "stale";
-}
+export function useModelPredictionsBoard(options: { enabled?: boolean }) {
+  const { enabled = true } = options;
 
-export function useModelPredictionsBoard(options: {
-  userId: string | null;
-  enabled?: boolean;
-  refresh?: () => Promise<AuthUser | null>;
-}) {
-  const { userId, enabled = true, refresh } = options;
-
-  const [picks, setPicks] = useState<LineShopPick[]>([]);
-  const [predictions, setPredictions] = useState<
-    Record<string, SportPredictionLookupResult | null>
-  >({});
+  const [slateDate, setSlateDate] = useState(predictionSlateToday);
+  const [today, setToday] = useState(predictionSlateToday);
+  const [historyRows, setHistoryRows] = useState<PredictionHistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [predictionsWarning, setPredictionsWarning] = useState<string | null>(
-    null
-  );
   const [errorCode, setErrorCode] = useState<string | undefined>();
-  const [errorTitle, setErrorTitle] = useState<string | undefined>();
   const [sportTab, setSportTab] = useState(ALL_SPORTS);
   const [minEdge, setMinEdge] = useState<string>(DEFAULT_MIN_EDGE);
   const [minConfidence, setMinConfidence] = useState(DEFAULT_MIN_CONFIDENCE);
@@ -117,118 +92,36 @@ export function useModelPredictionsBoard(options: {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [sort, setSort] = useState<PredictionSortKey>("win");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshIntervalSec, setRefreshIntervalSec] = useState(
-    String(DEFAULT_ARB_UI_REFRESH_SEC)
-  );
   const loadSeqRef = useRef(0);
 
-  const pollIntervalSec = useMemo(
-    () => parseIntervalSec(refreshIntervalSec, DEFAULT_ARB_UI_REFRESH_SEC),
-    [refreshIntervalSec]
-  );
+  const load = useCallback(
+    async (date: string) => {
+      if (!enabled) return;
+      const seq = ++loadSeqRef.current;
+      const isCurrent = () => loadSeqRef.current === seq;
 
-  const load = useCallback(async () => {
-    if (!enabled) return;
-    const seq = ++loadSeqRef.current;
-    const isCurrent = () => loadSeqRef.current === seq;
-
-    setLoading(true);
-    try {
-      const json = await oddsApi.getLightFeed(1000, 0);
-      if (!isCurrent()) return;
-      if (json.error) {
-        setError(json.error);
-        setErrorCode(json.errorCode);
-        setErrorTitle(json.errorTitle);
-        return;
-      }
-
-      setError(null);
-      setErrorCode(undefined);
-      setErrorTitle(undefined);
-      setPredictionsWarning(null);
-
-      const next = (json.lineShopPicks ?? []).filter(isEnginePick);
-      setPicks(next);
-
-      const eligible = uniqueEngineEventsForPredictionFetch(next).filter((p) =>
-        isEligibleSportPredictionWindow(p.commenceTime, new Date())
-      );
-      if (eligible.length === 0) {
-        setPredictions({});
-        setLastUpdatedAt(Date.now());
-        return;
-      }
-
-      const items = eligible.map((p) => {
-        const input = lineShopPickToEnginePredictionInput(p);
-        return {
-          key: input.key,
-          homeTeam: input.homeTeam,
-          awayTeam: input.awayTeam,
-          commenceTime: p.commenceTime,
-          sportKey: input.sportKey,
-        };
-      });
-
+      setLoading(true);
+      setHistoryRows([]);
       try {
-        const nextPredictions = await fetchEnginePredictionsWithCache(items, {
-          userId,
-          refresh,
-          onCached: (cached) => {
-            if (!isCurrent()) return;
-            if (Object.keys(cached).length > 0) {
-              // Merge — never replace the whole map with a partial cache hit set.
-              setPredictions((prev) => ({ ...prev, ...cached }));
-              // Refresh should reset "Updated Xs ago" as soon as the board can paint.
-              setLastUpdatedAt(Date.now());
-              // Board can paint from cache; don't keep the Refresh button spinning
-              // while the remaining prediction network fetch finishes.
-              setLoading(false);
-              setInitialLoadComplete(true);
-            }
-          },
-        });
+        const json = await predictionsApi.history(date);
         if (!isCurrent()) return;
-        setPredictions((prev) => {
-          const merged = { ...prev };
-          for (const [key, value] of Object.entries(nextPredictions)) {
-            if (value != null) merged[key] = value;
-            else if (!(key in merged)) merged[key] = null;
-          }
-          return merged;
-        });
+        setError(null);
+        setErrorCode(undefined);
+        setToday(json.today);
+        setHistoryRows(json.rows);
       } catch (e) {
         if (!isCurrent()) return;
-        const message =
-          e instanceof Error
-            ? e.message
-            : "Could not load model predictions from the sports data database.";
-        const planDenied =
-          /elite|pro subscription|subscription required/i.test(message);
-        setPredictionsWarning(
-          planDenied
-            ? "Elite access is required for model predictions. Your plan may have expired — upgrade or renew to continue."
-            : message
-        );
+        setHistoryRows([]);
+        setError(e instanceof Error ? e.message : "Failed to load predictions");
+        setErrorCode(e instanceof ApiError ? e.code : undefined);
+      } finally {
+        if (!isCurrent()) return;
+        setLoading(false);
+        setInitialLoadComplete(true);
       }
-      if (!isCurrent()) return;
-      setLastUpdatedAt(Date.now());
-    } catch (e) {
-      if (!isCurrent()) return;
-      if (refresh && (await refreshAuthIfProDenied(e, refresh))) return;
-      const message =
-        e instanceof Error ? e.message : "Failed to load predictions";
-      setError(message);
-      setErrorCode(e instanceof ApiError ? e.code : undefined);
-    } finally {
-      if (!isCurrent()) return;
-      setLoading(false);
-      setInitialLoadComplete(true);
-    }
-  }, [enabled, userId, refresh]);
+    },
+    [enabled]
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -236,14 +129,8 @@ export function useModelPredictionsBoard(options: {
       setInitialLoadComplete(false);
       return;
     }
-    void load();
-  }, [enabled, load]);
-
-  useEffect(() => {
-    if (!enabled || !autoRefresh) return;
-    const id = setInterval(() => void load(), pollIntervalSec * 1000);
-    return () => clearInterval(id);
-  }, [enabled, autoRefresh, pollIntervalSec, load]);
+    void load(slateDate);
+  }, [enabled, load, slateDate]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -251,52 +138,65 @@ export function useModelPredictionsBoard(options: {
     return () => clearInterval(id);
   }, [enabled]);
 
-  const allPredictionRows = useMemo(
-    () =>
-      buildModelPredictionRows(picks, predictions, new Date(nowMs), nowMs),
-    [picks, predictions, nowMs]
-  );
-
   const sportScopedRows = useMemo(() => {
-    if (sportTab === ALL_SPORTS) return allPredictionRows;
-    return allPredictionRows.filter((row) => row.pick.sportKey === sportTab);
-  }, [allPredictionRows, sportTab]);
+    if (sportTab === ALL_SPORTS) return historyRows;
+    return historyRows.filter((row) => row.sportKey === sportTab);
+  }, [historyRows, sportTab]);
+
+  const visibleRecord = useMemo(
+    () => summarizePredictionRecord(sportScopedRows),
+    [sportScopedRows]
+  );
 
   const filteredRows = useMemo(() => {
     return sportScopedRows.filter((row) => {
-      if (!meetsMinConfidence(row.insights.confidenceScore, minConfidence)) {
-        return false;
-      }
-      if (!meetsModelEdgeMin(row.modelEdge, minEdge)) return false;
-      return true;
+      if (!meetsMinConfidence(row.confidenceScore, minConfidence)) return false;
+      if (minEdge === "all") return true;
+      if (row.modelEdge == null) return false;
+      return meetsModelEdgeMin(row.modelEdge, minEdge);
     });
   }, [sportScopedRows, minConfidence, minEdge]);
 
-  const featuredEmptyMessage = buildModelPredictionsFeaturedEmptyCopy();
+  const featuredEmptyMessage =
+    slateDate === today
+      ? "No engine predictions for today."
+      : "No engine predictions saved for this date.";
 
-  const top = useMemo(
-    () => pickTopModelPredictionRow(filteredRows),
-    [filteredRows]
-  );
+  const featuredTitle =
+    slateDate === today ? "Top Prediction Right Now" : "Top Prediction";
+
+  const top = useMemo(() => {
+    const upcoming =
+      slateDate === today
+        ? filteredRows.filter((row) => row.outcome === "pending")
+        : [];
+    const pool = upcoming.length > 0 ? upcoming : filteredRows;
+    if (pool.length === 0) return null;
+    return pool.reduce((best, row) =>
+      comparePredictionRows(row, best) < 0 ? row : best
+    );
+  }, [filteredRows, slateDate, today]);
 
   const rows = useMemo(() => {
     const sorted = [...filteredRows];
     sorted.sort((a, b) => {
       let cmp = 0;
       if (sort === "win") {
-        cmp = compareModelPredictionRowsByTop(a, b);
+        cmp = comparePredictionRows(a, b);
         return sortDir === "desc" ? cmp : -cmp;
       }
       if (sort === "edge") {
-        cmp = a.modelEdge - b.modelEdge;
+        if (a.modelEdge == null && b.modelEdge == null) cmp = 0;
+        else if (a.modelEdge == null) return 1;
+        else if (b.modelEdge == null) return -1;
+        else cmp = a.modelEdge - b.modelEdge;
       } else if (sort === "start") {
         cmp =
-          new Date(a.pick.commenceTime).getTime() -
-          new Date(b.pick.commenceTime).getTime();
+          new Date(a.commenceTime).getTime() - new Date(b.commenceTime).getTime();
       } else {
         cmp =
-          displayConfidenceScore(a.insights.confidenceScore) -
-          displayConfidenceScore(b.insights.confidenceScore);
+          displayConfidenceScore(a.confidenceScore) -
+          displayConfidenceScore(b.confidenceScore);
       }
       return sortDir === "desc" ? -cmp : cmp;
     });
@@ -306,26 +206,25 @@ export function useModelPredictionsBoard(options: {
   const searched = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return rows;
-    return rows.filter((r) => {
+    return rows.filter((row) => {
       const hay =
-        `${r.pick.matchup} ${r.favoriteTeam} ${r.pick.sportTitle}`.toLowerCase();
+        `${row.awayTeam} ${row.homeTeam} ${row.favoriteTeam} ${row.sportTitle}`.toLowerCase();
       return hay.includes(q);
     });
   }, [rows, search]);
 
-  const listEmptyMessage = useMemo(
-    () =>
-      buildModelPredictionsListEmptyCopy({
+  const listEmptyMessage = useMemo(() => {
+    const q = search.trim();
+    if (q && rows.length > 0) {
+      return buildModelPredictionsListEmptyCopy({
         searchQuery: search,
         preSearchCount: rows.length,
-      }),
-    [search, rows.length]
-  );
-
-  const updatedAgoLabel =
-    lastUpdatedAt === null ? null : formatUpdatedAgo(nowMs - lastUpdatedAt);
-  const updatedTone: FreshnessTone =
-    lastUpdatedAt === null ? "idle" : freshnessTone(nowMs - lastUpdatedAt);
+      });
+    }
+    return slateDate === today
+      ? "No predictions for today."
+      : "No predictions saved for this date.";
+  }, [search, rows.length, slateDate, today]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -348,24 +247,28 @@ export function useModelPredictionsBoard(options: {
     setSortDir((prev) => (prev === "desc" ? "asc" : "desc"));
   }, []);
 
+  const stepSlateDate = useCallback(
+    (days: number) => {
+      setSlateDate((current) => {
+        const next = shiftSlateDate(current, days);
+        if (days > 0 && next > today) return current;
+        return next;
+      });
+    },
+    [today]
+  );
+
   return {
     loading,
-    refreshing: loading && initialLoadComplete,
     initialLoadComplete,
     error,
     errorCode,
-    errorTitle,
-    predictionsWarning,
     nowMs,
-    lastUpdatedAt,
-    updatedAgoLabel,
-    updatedTone,
-    pollIntervalSec,
-    autoRefresh,
-    setAutoRefresh,
-    refreshIntervalSec,
-    setRefreshIntervalSec,
-    reload: load,
+    slateDate,
+    setSlateDate,
+    today,
+    stepSlateDate,
+    visibleRecord: loading ? EMPTY_RECORD : visibleRecord,
     sportTab,
     setSportTab,
     minEdge,
@@ -380,11 +283,10 @@ export function useModelPredictionsBoard(options: {
     sortDir,
     setSortKey,
     toggleSortDir,
-    allPredictionRows,
-    filteredRows,
     top,
     searched,
     featuredEmptyMessage,
+    featuredTitle,
     listEmptyMessage,
   };
 }

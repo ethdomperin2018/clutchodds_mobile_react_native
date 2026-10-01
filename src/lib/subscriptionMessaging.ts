@@ -1,6 +1,15 @@
 import type { AuthUser } from "@/types/auth";
-import { getPlanPriceLabel } from "@/lib/billing/plans";
-import { getProTrialSummary } from "@/lib/billing/trial";
+import {
+  PLANS,
+  PRO_ANNUAL_PRICE_LABEL,
+  PRO_PRICE_LABEL,
+  getPlanPriceLabel,
+} from "@/lib/billing/plans";
+import {
+  getProTrialLabel,
+  getProTrialPriceNote,
+  getProTrialSummary,
+} from "@/lib/billing/trial";
 import { isEliteUser, isProOnlyUser, isProUser } from "@/lib/planAccess";
 
 export function formatMediumDate(iso: string | null): string | null {
@@ -58,11 +67,11 @@ export function getLapsedProMessage(user: AuthUser): string | null {
   const endDate = formatDate(user.currentPeriodEnd);
 
   if (hadExpiredTrial(user) && endDate) {
-    return `Your free trial ended on ${endDate}. Subscribe to Pro or Elite to unlock Arbitrage, Value Bets, bet log, and analytics.`;
+    return `Your free trial ended on ${endDate}. Pro unlocks Arbitrage, Value Bets, bet log, and analytics. Elite adds Model Predictions.`;
   }
 
   if (endDate) {
-    return `Your subscription ended on ${endDate}. Resubscribe to unlock Arbitrage, Value Bets, bet log, and analytics.`;
+    return `Your subscription ended on ${endDate}. Pro unlocks Arbitrage, Value Bets, bet log, and analytics. Elite adds Model Predictions.`;
   }
 
   return "Your subscription is no longer active. Resubscribe to unlock paid features.";
@@ -106,6 +115,14 @@ export function getEliteUpgradeLabel(user?: AuthUser | null): string {
   return `Upgrade to Elite (${getPlanPriceLabel("elite", interval)})`;
 }
 
+export function getEliteUpgradeConfirmDescription(user: AuthUser): string {
+  const price = getPlanPriceLabel("elite", user.billingInterval ?? "month");
+  if (isTrialingUser(user)) {
+    return `Your Pro trial will end and Elite billing (${price}) starts today. A prorated charge may apply to your card on file. Prediction insights unlock immediately.`;
+  }
+  return `Upgrade your subscription to Elite (${price}). A prorated charge may apply today on your saved card. Prediction insights unlock immediately.`;
+}
+
 export function getPaidRenewalPriceLabel(user: AuthUser): string {
   const interval = user.billingInterval ?? "month";
   if (isEliteUser(user)) return getPlanPriceLabel("elite", interval);
@@ -114,6 +131,56 @@ export function getPaidRenewalPriceLabel(user: AuthUser): string {
 
 export function canUpgradeToElite(user: AuthUser): boolean {
   return isProOnlyUser(user);
+}
+
+export function getProCheckoutCta(user: AuthUser | null): string {
+  if (!user || !isLapsedProUser(user)) return PLANS.pro.cta;
+  if (needsPaymentUpdate(user)) return "Update payment method";
+  if (!user.proTrialUsed) return PLANS.pro.cta;
+  if (hadExpiredTrial(user)) return "Subscribe to Pro";
+  return "Resubscribe to Pro";
+}
+
+export function getProPricingPriceNote(user: AuthUser | null): string {
+  if (user && isLapsedProUser(user) && user.proTrialUsed) return "billed monthly";
+  return getProTrialPriceNote();
+}
+
+export function getProPricingDescription(user: AuthUser | null): string {
+  if (user && isLapsedProUser(user) && user.proTrialUsed) {
+    return `Full scanner, bet log, and performance analytics. Subscribe at ${PRO_PRICE_LABEL} or ${PRO_ANNUAL_PRICE_LABEL} (2 months free) — cancel anytime.`;
+  }
+  return PLANS.pro.description;
+}
+
+export function getProPricingPerks(user: AuthUser | null): string[] {
+  if (!user || !isLapsedProUser(user)) return PLANS.pro.perks;
+  if (!user.proTrialUsed) return PLANS.pro.perks;
+  return PLANS.pro.perks.map((perk) =>
+    perk.includes(getProTrialLabel()) ? "Full Pro access" : perk
+  );
+}
+
+export function getPricingFooterMessage(user: AuthUser | null): string | null {
+  if (!user || isProUser(user)) return null;
+  if (isLapsedProUser(user)) return getLapsedProMessage(user);
+  if (!hadProSubscription(user)) {
+    return `You're on Free — ${getProTrialSummary().toLowerCase()} to unlock the scanner and bet log, or go Elite for prediction insights.`;
+  }
+  return null;
+}
+
+export function getBillingSuccessMessage(user: AuthUser | null): string {
+  if (user && isEliteUser(user)) {
+    return "Welcome to Elite! Model Predictions and Value Bets Elite overlays are unlocked.";
+  }
+  if (user && isTrialingUser(user)) {
+    return "Your free trial has started. Full Pro access is unlocked.";
+  }
+  if (user && isProUser(user)) {
+    return "Welcome to Pro! Arbitrage, Value Bets, bet log, and analytics are unlocked.";
+  }
+  return "Payment received — your plan may take a moment to update.";
 }
 
 export { getProTrialSummary };

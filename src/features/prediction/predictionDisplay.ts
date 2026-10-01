@@ -1,9 +1,13 @@
 import { displayConfidenceScore } from "@/lib/valueBets/format";
 
-export function formatKickoffWhen(commenceTime: string, nowMs: number): string {
+export function formatKickoffWhen(
+  commenceTime: string,
+  nowMs: number,
+  settled = false
+): string {
   const d = new Date(commenceTime);
   if (Number.isNaN(d.getTime())) return "—";
-  if (d.getTime() <= nowMs) return "Live";
+  if (!settled && d.getTime() <= nowMs) return "Live";
   const now = new Date(nowMs);
   const startOfDay = (x: Date) =>
     new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
@@ -43,6 +47,27 @@ export function formatConfidence10(score: number): string {
 }
 
 export type ModelEdgeTone = "pos" | "neg" | "flat";
+
+export function outcomeLabel(
+  outcome: "pending" | "win" | "loss" | "push",
+  commenceTime: string,
+  nowMs: number
+): string {
+  if (outcome === "win") return "Win";
+  if (outcome === "loss") return "Loss";
+  if (outcome === "push") return "Push";
+  return startsInLabel(commenceTime, nowMs);
+}
+
+export function scoreLabel(
+  outcome: "pending" | "win" | "loss" | "push",
+  awayScore: number | null,
+  homeScore: number | null
+): string | null {
+  if (outcome === "pending") return null;
+  if (awayScore == null || homeScore == null) return null;
+  return `${awayScore}–${homeScore}`;
+}
 
 export function modelEdgeTone(edge: number): ModelEdgeTone {
   if (edge > 0) return "pos";

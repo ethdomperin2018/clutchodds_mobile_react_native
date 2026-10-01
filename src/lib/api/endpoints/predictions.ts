@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
+import type { PredictionHistoryResponse } from "@/lib/predictions/history";
 import type {
   EnginePredictionFetchItem,
   SportPredictionLookupResult,
@@ -14,4 +15,9 @@ export const predictionsApi = {
       method: "POST",
       body: { picks },
     }),
+  history: (date: string) =>
+    apiRequest<PredictionHistoryResponse>(
+      `/api/model-predictions?date=${encodeURIComponent(date)}`,
+      { timeoutMs: 45_000 }
+    ),
 };

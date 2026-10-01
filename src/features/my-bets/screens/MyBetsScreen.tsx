@@ -22,6 +22,7 @@ import { parseArbEventIdFromNotes } from "@/lib/arbBetNotes";
 import { isAccountActive } from "@/lib/accountStatus";
 import { parseLineShopFromNotes } from "@/lib/lineShopBetNotes";
 import { openPricing } from "@/lib/openLinks";
+import { openManageSubscription } from "@/lib/billing/manageSubscription";
 import { isProUser } from "@/lib/planAccess";
 import {
   getLapsedPrimaryActionLabel,
@@ -396,8 +397,8 @@ function ProUpgradeCard({ user }: { user: AuthUser | null }) {
   const lapsed = user ? isLapsedProUser(user) : false;
 
   const onPress = () => {
-    if (paymentFailed || lapsed) {
-      void openPricing("/my-bets");
+    if (paymentFailed) {
+      if (user) void openManageSubscription(user, "settings");
       return;
     }
     void openPricing("/my-bets");

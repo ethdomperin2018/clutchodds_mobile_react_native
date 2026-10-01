@@ -2,33 +2,35 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { TeamLogo } from "@/components/TeamLogo";
 import { PredictionMetricsBlock } from "@/features/prediction/PredictionMetricsBlock";
 import { formatKickoffWhen } from "@/features/prediction/predictionDisplay";
-import type { ModelPredictionRow } from "@/lib/modelPredictions/modelPredictionRows";
+import type { PredictionHistoryRow } from "@/lib/predictions/history";
 import { awayAtHomeLabel } from "@/lib/teamDisplay";
 import { fonts } from "@/theme/typography";
 
 export function TopPredictionCard({
   row,
   nowMs,
+  title,
 }: {
-  row: ModelPredictionRow;
+  row: PredictionHistoryRow;
   nowMs: number;
+  title: string;
 }) {
-  const { pick } = row;
-  const subline = `${formatKickoffWhen(pick.commenceTime, nowMs)} · ${pick.sportTitle}`;
+  const settled = row.outcome !== "pending";
+  const subline = `${formatKickoffWhen(row.commenceTime, nowMs, settled)} · ${row.sportTitle}`;
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Top Prediction Right Now</Text>
+      <Text style={styles.eyebrow}>{title}</Text>
 
       <View style={styles.matchup}>
-        <TeamLogo size={44} sportKey={pick.sportKey} teamName={pick.awayTeam} />
+        <TeamLogo size={44} sportKey={row.sportKey} teamName={row.awayTeam} />
         <View style={styles.matchupCopy}>
           <Text numberOfLines={2} style={styles.matchupTitle}>
-            {awayAtHomeLabel(pick.awayTeam, pick.homeTeam)}
+            {awayAtHomeLabel(row.awayTeam, row.homeTeam)}
           </Text>
           <Text style={styles.matchupSub}>{subline}</Text>
         </View>
-        <TeamLogo size={44} sportKey={pick.sportKey} teamName={pick.homeTeam} />
+        <TeamLogo size={44} sportKey={row.sportKey} teamName={row.homeTeam} />
       </View>
 
       <PredictionMetricsBlock row={row} />
@@ -38,14 +40,16 @@ export function TopPredictionCard({
 
 export function TopPredictionEmpty({
   message,
+  title = "Top Prediction Right Now",
   loading = false,
 }: {
   message: string;
+  title?: string;
   loading?: boolean;
 }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Top Prediction Right Now</Text>
+      <Text style={styles.eyebrow}>{title}</Text>
       <View style={styles.emptyBody}>
         {loading ? <ActivityIndicator color="#A78BFA" /> : null}
         <Text style={loading ? styles.loadingCopy : styles.emptyCopy}>

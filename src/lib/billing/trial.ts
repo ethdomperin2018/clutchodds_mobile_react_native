@@ -15,6 +15,10 @@ export function getProTrialLabel(): string {
   return `${getProTrialDays()}-day free trial`;
 }
 
+export function getProTrialPriceNote(): string {
+  return `after ${getProTrialLabel()}`;
+}
+
 export function getProTrialSummary(): string {
   return `${getProTrialLabel()} · Cancel anytime · Then $${env.proPriceAmount}/mo`;
 }

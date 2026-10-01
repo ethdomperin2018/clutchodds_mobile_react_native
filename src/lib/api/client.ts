@@ -16,6 +16,7 @@ export class ApiError extends Error {
 
 type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
+  timeoutMs?: number;
 };
 
 async function buildHeaders(headers?: HeadersInit) {
@@ -44,23 +45,27 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  const headers = await buildHeaders(options.headers);
-  const hasBody = options.body !== undefined;
+  const { timeoutMs, body, headers: headerInit, ...rest } = options;
+  const headers = await buildHeaders(headerInit);
+  const hasBody = body !== undefined;
 
   if (hasBody) {
     headers.set("Content-Type", "application/json");
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    timeoutMs ?? DEFAULT_TIMEOUT_MS
+  );
 
   try {
     const response = await fetch(`${env.apiBaseUrl}${path}`, {
-      ...options,
+      ...rest,
       headers,
       credentials: "include",
-      signal: options.signal ?? controller.signal,
-      body: hasBody ? JSON.stringify(options.body) : undefined,
+      signal: rest.signal ?? controller.signal,
+      body: hasBody ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {

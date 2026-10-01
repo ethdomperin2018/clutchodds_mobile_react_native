@@ -3,9 +3,10 @@ import { TeamLogo } from "@/components/TeamLogo";
 import { PredictionMetricsBlock } from "@/features/prediction/PredictionMetricsBlock";
 import {
   formatKickoffWhen,
-  startsInLabel,
+  outcomeLabel,
+  scoreLabel,
 } from "@/features/prediction/predictionDisplay";
-import type { ModelPredictionRow } from "@/lib/modelPredictions/modelPredictionRows";
+import type { PredictionHistoryRow } from "@/lib/predictions/history";
 import { awayAtHomeLabel } from "@/lib/teamDisplay";
 import { fonts } from "@/theme/typography";
 
@@ -13,34 +14,46 @@ export function PredictionListCard({
   row,
   nowMs,
 }: {
-  row: ModelPredictionRow;
+  row: PredictionHistoryRow;
   nowMs: number;
 }) {
-  const { pick } = row;
-  const startsIn = startsInLabel(pick.commenceTime, nowMs);
-  const isLive = startsIn === "Live";
-  const subline = `${formatKickoffWhen(pick.commenceTime, nowMs)} · ${pick.sportTitle}`;
+  const label = outcomeLabel(row.outcome, row.commenceTime, nowMs);
+  const score = scoreLabel(row.outcome, row.awayScore, row.homeScore);
+  const isLive = row.outcome === "pending" && label === "Live";
+  const settled = row.outcome !== "pending";
+  const subline = `${formatKickoffWhen(row.commenceTime, nowMs, settled)} · ${row.sportTitle}`;
+  const pillText = score ? `${label} ${score}` : label;
 
   return (
     <View style={styles.card}>
       <View style={styles.head}>
         <View
-          style={[styles.startsPill, isLive ? styles.startsLive : null]}
+          style={[
+            styles.startsPill,
+            row.outcome === "win" || isLive ? styles.startsLive : null,
+            row.outcome === "loss" ? styles.startsLoss : null,
+          ]}
         >
-          <Text style={[styles.startsText, isLive ? styles.startsLiveText : null]}>
-            {startsIn}
+          <Text
+            style={[
+              styles.startsText,
+              row.outcome === "win" || isLive ? styles.startsLiveText : null,
+              row.outcome === "loss" ? styles.startsLossText : null,
+            ]}
+          >
+            {pillText}
           </Text>
         </View>
 
         <View style={styles.matchup}>
-          <TeamLogo size={36} sportKey={pick.sportKey} teamName={pick.awayTeam} />
+          <TeamLogo size={36} sportKey={row.sportKey} teamName={row.awayTeam} />
           <View style={styles.matchupCopy}>
             <Text numberOfLines={2} style={styles.matchupTitle}>
-              {awayAtHomeLabel(pick.awayTeam, pick.homeTeam)}
+              {awayAtHomeLabel(row.awayTeam, row.homeTeam)}
             </Text>
             <Text style={styles.matchupSub}>{subline}</Text>
           </View>
-          <TeamLogo size={36} sportKey={pick.sportKey} teamName={pick.homeTeam} />
+          <TeamLogo size={36} sportKey={row.sportKey} teamName={row.homeTeam} />
         </View>
       </View>
 
@@ -58,15 +71,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   head: {
-    position: "relative",
-    paddingTop: 4,
     paddingHorizontal: 4,
   },
   startsPill: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    zIndex: 1,
+    alignSelf: "flex-end",
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.06)",
     paddingHorizontal: 8,
@@ -74,6 +82,9 @@ const styles = StyleSheet.create({
   },
   startsLive: {
     backgroundColor: "rgba(16,185,129,0.15)",
+  },
+  startsLoss: {
+    backgroundColor: "rgba(239,68,68,0.15)",
   },
   startsText: {
     fontFamily: fonts.sansSemiBold,
@@ -85,12 +96,15 @@ const styles = StyleSheet.create({
   startsLiveText: {
     color: "#34D399",
   },
+  startsLossText: {
+    color: "#F87171",
+  },
   matchup: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingTop: 8,
+    marginTop: 8,
   },
   matchupCopy: {
     minWidth: 0,

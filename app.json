@@ -12,10 +12,12 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.clutchodds.app"
     },
     "android": {
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.clutchoddsmobile"
     },
     "plugins": [
       "expo-router",
@@ -29,7 +31,15 @@
           "image": "./assets/images/logo-tight.jpg",
           "imageWidth": 220
         }
-      ]
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "",
+          "enableGooglePay": false
+        }
+      ],
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true,

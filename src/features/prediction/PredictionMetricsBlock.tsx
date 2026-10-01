@@ -6,7 +6,7 @@ import {
   formatConfidence10,
   modelEdgeTone,
 } from "@/features/prediction/predictionDisplay";
-import type { ModelPredictionRow } from "@/lib/modelPredictions/modelPredictionRows";
+import type { PredictionHistoryRow } from "@/lib/predictions/history";
 import { shortTeamName } from "@/lib/teamDisplay";
 import { displayConfidenceScore } from "@/lib/valueBets/format";
 import { fonts } from "@/theme/typography";
@@ -17,10 +17,9 @@ const STAR_PATH =
 export function PredictionMetricsBlock({
   row,
 }: {
-  row: ModelPredictionRow;
+  row: PredictionHistoryRow;
 }) {
-  const { pick, insights, favoriteTeam, winProb, modelEdge } = row;
-  const edgeTone = modelEdgeTone(modelEdge);
+  const edgeTone = row.modelEdge == null ? "flat" : modelEdgeTone(row.modelEdge);
 
   return (
     <View style={styles.grid}>
@@ -29,44 +28,48 @@ export function PredictionMetricsBlock({
         <View style={styles.favoriteRow}>
           <TeamLogo
             size={20}
-            sportKey={pick.sportKey}
-            teamName={favoriteTeam}
+            sportKey={row.sportKey}
+            teamName={row.favoriteTeam}
           />
           <Text numberOfLines={1} style={styles.favoriteText}>
-            {shortTeamName(favoriteTeam)}
+            {shortTeamName(row.favoriteTeam)}
           </Text>
         </View>
       </View>
 
       <View style={styles.cell}>
         <Text style={styles.label}>Model win prob</Text>
-        <WinProbBar value={winProb} />
+        <WinProbBar value={row.winProb} />
       </View>
 
       <View style={styles.cell}>
         <Text style={styles.label}>Confidence</Text>
         <View style={styles.confidenceCol}>
-          <ConfidenceStars score={insights.confidenceScore} />
+          <ConfidenceStars score={row.confidenceScore} />
           <Text style={styles.confidenceScore}>
-            {formatConfidence10(insights.confidenceScore)}
+            {formatConfidence10(row.confidenceScore)}
           </Text>
         </View>
       </View>
 
       <View style={styles.cell}>
         <Text style={styles.label}>Model edge</Text>
-        <AnimatedNumber
-          format="signed-percent-2"
-          style={[
-            styles.edgeValue,
-            edgeTone === "pos"
-              ? styles.edgePos
-              : edgeTone === "neg"
-                ? styles.edgeNeg
-                : styles.edgeFlat,
-          ]}
-          value={modelEdge}
-        />
+        {row.modelEdge == null ? (
+          <Text style={[styles.edgeValue, styles.edgeFlat]}>—</Text>
+        ) : (
+          <AnimatedNumber
+            format="signed-percent-2"
+            style={[
+              styles.edgeValue,
+              edgeTone === "pos"
+                ? styles.edgePos
+                : edgeTone === "neg"
+                  ? styles.edgeNeg
+                  : styles.edgeFlat,
+            ]}
+            value={row.modelEdge}
+          />
+        )}
       </View>
     </View>
   );

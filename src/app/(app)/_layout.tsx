@@ -17,6 +17,13 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="pricing"
+        options={{
+          animation: "slide_from_right",
+          gestureEnabled: true,
+        }}
+      />
     </Stack>
   );
 }

@@ -22,6 +22,7 @@ export type AuthUser = {
   cancelAtPeriodEnd: boolean;
   hasSubscriptionRecord: boolean;
   canManageStripeBilling: boolean;
+  billingProvider?: "apple" | "stripe" | null;
   proTrialUsed: boolean;
   isAdmin: boolean;
   accountStatus: UserAccountStatus;
