@@ -19,3 +19,13 @@ export function useInAppSubscription() {
 
   return { start, host: null as null };
 }
+
+/** App Store sync runs on iOS only. */
+export function useAppStoreSync() {}
+
+/** App Store prices and restore exist on iOS only. */
+export function useAppStorePrices(): Record<string, string> | null {
+  return null;
+}
+
+export const restoreAppStorePurchases: (() => Promise<number>) | null = null;

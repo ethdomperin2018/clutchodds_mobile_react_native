@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   refreshOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 10,
     alignItems: "center",
     paddingTop: 64,
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   confirmBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.7)",
   },
   confirmCard: {

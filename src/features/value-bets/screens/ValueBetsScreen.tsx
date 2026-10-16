@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   refreshOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 10,
     alignItems: "center",
     paddingTop: 64,

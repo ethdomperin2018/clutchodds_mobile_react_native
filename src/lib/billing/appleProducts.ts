@@ -13,9 +13,29 @@ export const APPLE_PRODUCT_IDS = {
   },
 } as const;
 
+export const APPLE_PRODUCT_SKUS: string[] = [
+  APPLE_PRODUCT_IDS.pro.month,
+  APPLE_PRODUCT_IDS.pro.year,
+  APPLE_PRODUCT_IDS.elite.month,
+  APPLE_PRODUCT_IDS.elite.year,
+];
+
 export function appleProductId(
   plan: CheckoutPlan,
   interval: BillingInterval
 ): string {
   return APPLE_PRODUCT_IDS[plan][interval];
+}
+
+export function appleProductPlan(
+  productId: string
+): { plan: CheckoutPlan; interval: BillingInterval } | null {
+  for (const plan of ["pro", "elite"] as const) {
+    for (const interval of ["month", "year"] as const) {
+      if (APPLE_PRODUCT_IDS[plan][interval] === productId) {
+        return { plan, interval };
+      }
+    }
+  }
+  return null;
 }

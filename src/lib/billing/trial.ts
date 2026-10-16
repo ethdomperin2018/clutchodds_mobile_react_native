@@ -8,7 +8,7 @@ function parseTrialDays(raw: string | undefined, fallback: number): number {
 }
 
 export function getProTrialDays(): number {
-  return parseTrialDays(process.env.EXPO_PUBLIC_PRO_TRIAL_DAYS, 14);
+  return parseTrialDays(process.env.EXPO_PUBLIC_PRO_TRIAL_DAYS, 7);
 }
 
 export function getProTrialLabel(): string {

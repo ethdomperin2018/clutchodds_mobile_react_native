@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,7 +14,11 @@ import { useSession } from "@/features/auth/SessionProvider";
 import type { CheckoutPlan } from "@/lib/api/endpoints/billing";
 import { ApiError } from "@/lib/api/client";
 import {
-  ELITE_PRICE_LABEL,
+  openPrivacyPolicy,
+  openTermsOfService,
+} from "@/features/legal/openLegalDocument";
+import { usePlanPriceLabel } from "@/lib/billing/usePlanPriceLabel";
+import {
   PLANS,
   type BillingInterval,
   type PlanDefinition,
@@ -22,7 +27,10 @@ import {
   isAnnualPricingUiEnabled,
 } from "@/lib/billing/plans";
 import { getProTrialDays } from "@/lib/billing/trial";
-import { useInAppSubscription } from "@/lib/billing/inAppPayment";
+import {
+  restoreAppStorePurchases,
+  useInAppSubscription,
+} from "@/lib/billing/inAppPayment";
 import { openManageSubscription } from "@/lib/billing/manageSubscription";
 import { refreshUntilPro } from "@/lib/billing/stripeBrowser";
 import { isEliteUser, isProOnlyUser, isProUser } from "@/lib/planAccess";
@@ -63,8 +71,44 @@ export function PricingScreen() {
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const { label: planPriceLabel } = usePlanPriceLabel(user?.billingProvider);
+  const appStoreBilling = Platform.OS === "ios";
+
+  function planPriceNote(plan: CheckoutPlan, cycle: BillingInterval): string {
+    if (plan === "pro" && cycle === "month" && lapsedActive) {
+      return getProPricingPriceNote(user);
+    }
+    return getPlanPriceNote(plan, cycle);
+  }
 
   const billingInterval = annualEnabled ? interval : "month";
+
+  async function handleRestore() {
+    if (!restoreAppStorePurchases || restoring) return;
+    setRestoring(true);
+    setError(null);
+    setStatusMessage(null);
+    try {
+      const restored = await restoreAppStorePurchases();
+      const next = await refresh();
+      if (restored > 0 && next && isProUser(next)) {
+        setStatusMessage(getBillingSuccessMessage(next));
+      } else {
+        setStatusMessage(
+          "No active App Store subscription was found for this account."
+        );
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Could not restore purchases."
+      );
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   const syncAfterSuccess = useCallback(async () => {
     setSyncing(true);
@@ -140,7 +184,7 @@ export function PricingScreen() {
       type: "button",
       label:
         plan === "elite" && stripeProOnly
-          ? `Upgrade to Elite (${getPlanPriceLabel("elite", billingInterval)})`
+          ? `Upgrade to Elite (${planPriceLabel("elite", billingInterval)})`
           : plan === "pro"
             ? proCta
             : PLANS[plan].cta,
@@ -197,13 +241,6 @@ export function PricingScreen() {
       : paidAction("elite");
 
   const pricingFooter = getPricingFooterMessage(user);
-  const proPriceNote =
-    billingInterval === "year"
-      ? getPlanPriceNote("pro", "year")
-      : lapsedActive
-        ? getProPricingPriceNote(user)
-        : getPlanPriceNote("pro", "month");
-
   const statusTone =
     user && isEliteUser(user)
       ? styles.statusElite
@@ -237,8 +274,8 @@ export function PricingScreen() {
             Start with a free account and the public market snapshot. Try Pro
             free for {getProTrialDays()} days — Arbitrage, Value Bets, bet log,
             analytics, and Telegram arb alerts. Elite adds Model Predictions
-            plus model overlays on Value Bets ({ELITE_PRICE_LABEL}). Save 2
-            months with annual billing.
+            plus model overlays on Value Bets ({planPriceLabel("elite", "month")}).
+            {" "}Save 2 months with annual billing.
           </Text>
         </View>
 
@@ -276,10 +313,15 @@ export function PricingScreen() {
                 action={proAction}
                 isCurrent={Boolean(proIsCurrent)}
                 badge="Most popular"
-                priceLabel={getPlanPriceLabel("pro", billingInterval)}
-                priceNote={proPriceNote}
+                priceLabel={planPriceLabel("pro", billingInterval)}
+                priceNote={planPriceNote("pro", billingInterval)}
                 description={
-                  lapsedActive ? getProPricingDescription(user) : undefined
+                  lapsedActive
+                    ? getProPricingDescription(user, {
+                        month: planPriceLabel("pro", "month"),
+                        year: planPriceLabel("pro", "year"),
+                      })
+                    : undefined
                 }
                 perks={lapsedActive ? getProPricingPerks(user) : undefined}
               />
@@ -288,8 +330,8 @@ export function PricingScreen() {
                 action={eliteAction}
                 isCurrent={Boolean(eliteIsCurrent)}
                 badge="Prediction insights"
-                priceLabel={getPlanPriceLabel("elite", billingInterval)}
-                priceNote={getPlanPriceNote("elite", billingInterval)}
+                priceLabel={planPriceLabel("elite", billingInterval)}
+                priceNote={planPriceNote("elite", billingInterval)}
               />
             </View>
 
@@ -332,6 +374,53 @@ export function PricingScreen() {
                 overlays are unlocked. Manage billing in Settings.
               </Text>
             ) : null}
+
+            <View style={styles.legal}>
+              {restoreAppStorePurchases ? (
+                <Pressable
+                  onPress={() => void handleRestore()}
+                  disabled={restoring}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.restoreBtn,
+                    (pressed || restoring) && styles.pressed,
+                  ]}
+                >
+                  {restoring ? (
+                    <ActivityIndicator color="#E4E4E7" />
+                  ) : (
+                    <Text style={styles.restoreBtnText}>Restore Purchases</Text>
+                  )}
+                </Pressable>
+              ) : null}
+
+              {appStoreBilling ? (
+                <Text style={styles.legalText}>
+                  Subscriptions renew automatically at the price shown unless
+                  canceled at least 24 hours before the end of the current
+                  period. Payment is charged to your Apple Account. Manage or
+                  cancel anytime in your App Store account settings.
+                </Text>
+              ) : null}
+
+              <View style={styles.legalLinks}>
+                <Pressable
+                  onPress={() => void openTermsOfService()}
+                  accessibilityRole="link"
+                  hitSlop={8}
+                >
+                  <Text style={styles.legalLink}>Terms of Use</Text>
+                </Pressable>
+                <Text style={styles.legalDot}>·</Text>
+                <Pressable
+                  onPress={() => void openPrivacyPolicy()}
+                  accessibilityRole="link"
+                  hitSlop={8}
+                >
+                  <Text style={styles.legalLink}>Privacy Policy</Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
         )}
       </AppScreen>
@@ -535,6 +624,49 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.75,
+  },
+  legal: {
+    gap: 12,
+    alignItems: "center",
+    paddingTop: 4,
+  },
+  restoreBtn: {
+    minHeight: 44,
+    minWidth: 180,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(24,24,27,0.8)",
+  },
+  restoreBtnText: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#E4E4E7",
+    fontSize: 14,
+  },
+  legalText: {
+    fontFamily: fonts.sansRegular,
+    color: "#71717A",
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  legalLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  legalLink: {
+    fontFamily: fonts.sansSemiBold,
+    color: "#A1A1AA",
+    fontSize: 13,
+    textDecorationLine: "underline",
+  },
+  legalDot: {
+    color: "#52525B",
+    fontSize: 13,
   },
   content: {
     gap: 20,

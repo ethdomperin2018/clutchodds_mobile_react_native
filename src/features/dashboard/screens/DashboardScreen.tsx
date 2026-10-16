@@ -710,7 +710,8 @@ export function DashboardScreen() {
     const rows = [...filteredBets]
       .sort(
         (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(a.createdAt ?? 0).getTime() -
+          new Date(b.createdAt ?? 0).getTime()
       )
       .slice(-24);
     if (rows.length === 0) return null;

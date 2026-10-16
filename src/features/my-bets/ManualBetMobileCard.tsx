@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   resultMenu: {
     position: "absolute",

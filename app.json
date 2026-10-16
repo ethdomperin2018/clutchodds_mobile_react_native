@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "clutchodds",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/logo-tight.jpg",

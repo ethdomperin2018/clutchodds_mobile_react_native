@@ -17,6 +17,7 @@ import { ApiError } from "@/lib/api/client";
 import { authApi } from "@/lib/api/endpoints/auth";
 import { useInAppSubscription } from "@/lib/billing/inAppPayment";
 import { openManageSubscription } from "@/lib/billing/manageSubscription";
+import { usePlanPriceLabel } from "@/lib/billing/usePlanPriceLabel";
 import { refreshUntilPro } from "@/lib/billing/stripeBrowser";
 import {
   DEFAULT_ARB_UI_REFRESH_SEC,
@@ -117,6 +118,8 @@ function BillingSection({
   const resubscribeLabel = getResubscribeLabel(user);
   const { refresh } = useSession();
   const { start: startSubscription, host: paymentHost } = useInAppSubscription();
+  const { label: planPriceLabel } = usePlanPriceLabel(user.billingProvider);
+  const elitePriceLabel = planPriceLabel("elite", user.billingInterval ?? "month");
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
   const [eliteUpgradeOpen, setEliteUpgradeOpen] = useState(false);
@@ -219,7 +222,7 @@ function BillingSection({
         {trialing && !elite ? (
           <DlRow
             label="After trial"
-            value={getPaidRenewalPriceLabel(user)}
+            value={getPaidRenewalPriceLabel(user, planPriceLabel)}
           />
         ) : null}
         {!pro && lapsed && renewalDate ? (
@@ -342,7 +345,7 @@ function BillingSection({
             ]}
           >
             <Text style={styles.eliteBtnText} numberOfLines={1}>
-              {getEliteUpgradeLabel(user)}
+              {getEliteUpgradeLabel(user, elitePriceLabel)}
             </Text>
           </Pressable>
         ) : null}
@@ -360,7 +363,7 @@ function BillingSection({
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Upgrade to Elite?</Text>
             <Text style={styles.modalCopy}>
-              {getEliteUpgradeConfirmDescription(user)}
+              {getEliteUpgradeConfirmDescription(user, elitePriceLabel)}
             </Text>
             {eliteError ? (
               <Text style={styles.portalError}>{eliteError}</Text>

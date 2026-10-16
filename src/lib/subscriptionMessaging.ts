@@ -3,6 +3,7 @@ import {
   PLANS,
   PRO_ANNUAL_PRICE_LABEL,
   PRO_PRICE_LABEL,
+  type BillingInterval,
   getPlanPriceLabel,
 } from "@/lib/billing/plans";
 import {
@@ -110,23 +111,35 @@ export function getLapsedPrimaryActionLabel(user: AuthUser | null): string {
   return getResubscribeLabel(user);
 }
 
-export function getEliteUpgradeLabel(user?: AuthUser | null): string {
+export function getEliteUpgradeLabel(
+  user?: AuthUser | null,
+  priceLabel?: string
+): string {
   const interval = user?.billingInterval ?? "month";
-  return `Upgrade to Elite (${getPlanPriceLabel("elite", interval)})`;
+  return `Upgrade to Elite (${priceLabel ?? getPlanPriceLabel("elite", interval)})`;
 }
 
-export function getEliteUpgradeConfirmDescription(user: AuthUser): string {
-  const price = getPlanPriceLabel("elite", user.billingInterval ?? "month");
+export function getEliteUpgradeConfirmDescription(
+  user: AuthUser,
+  priceLabel?: string
+): string {
+  const price =
+    priceLabel ?? getPlanPriceLabel("elite", user.billingInterval ?? "month");
+  if (user.billingProvider === "apple") {
+    return `Upgrade your App Store subscription to Elite (${price}). Apple charges your Apple Account and credits the unused part of your current plan. Prediction insights unlock immediately.`;
+  }
   if (isTrialingUser(user)) {
     return `Your Pro trial will end and Elite billing (${price}) starts today. A prorated charge may apply to your card on file. Prediction insights unlock immediately.`;
   }
   return `Upgrade your subscription to Elite (${price}). A prorated charge may apply today on your saved card. Prediction insights unlock immediately.`;
 }
 
-export function getPaidRenewalPriceLabel(user: AuthUser): string {
+export function getPaidRenewalPriceLabel(
+  user: AuthUser,
+  priceLabel: (plan: "pro" | "elite", interval: BillingInterval) => string = getPlanPriceLabel
+): string {
   const interval = user.billingInterval ?? "month";
-  if (isEliteUser(user)) return getPlanPriceLabel("elite", interval);
-  return getPlanPriceLabel("pro", interval);
+  return priceLabel(isEliteUser(user) ? "elite" : "pro", interval);
 }
 
 export function canUpgradeToElite(user: AuthUser): boolean {
@@ -146,9 +159,12 @@ export function getProPricingPriceNote(user: AuthUser | null): string {
   return getProTrialPriceNote();
 }
 
-export function getProPricingDescription(user: AuthUser | null): string {
+export function getProPricingDescription(
+  user: AuthUser | null,
+  prices?: { month?: string; year?: string }
+): string {
   if (user && isLapsedProUser(user) && user.proTrialUsed) {
-    return `Full scanner, bet log, and performance analytics. Subscribe at ${PRO_PRICE_LABEL} or ${PRO_ANNUAL_PRICE_LABEL} (2 months free) — cancel anytime.`;
+    return `Full scanner, bet log, and performance analytics. Subscribe at ${prices?.month ?? PRO_PRICE_LABEL} or ${prices?.year ?? PRO_ANNUAL_PRICE_LABEL} (2 months free) — cancel anytime.`;
   }
   return PLANS.pro.description;
 }

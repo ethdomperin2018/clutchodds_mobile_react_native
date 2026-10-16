@@ -1,12 +1,15 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { AppState } from "react-native";
 import {
   fetchProducts,
   finishTransaction,
+  getAvailablePurchases,
   initConnection,
   isUserCancelledError,
   purchaseErrorListener,
   purchaseUpdatedListener,
   requestPurchase,
+  restorePurchases,
   type Purchase,
 } from "expo-iap";
 import { useSession } from "@/features/auth/SessionProvider";
@@ -14,7 +17,12 @@ import {
   billingApi,
   type CheckoutPlan,
 } from "@/lib/api/endpoints/billing";
-import { appleProductId } from "@/lib/billing/appleProducts";
+import {
+  APPLE_PRODUCT_SKUS,
+  appleProductId,
+  appleProductPlan,
+} from "@/lib/billing/appleProducts";
+import { isProUser } from "@/lib/planAccess";
 import type { BillingInterval } from "@/lib/billing/plans";
 import type { BillingBrowserResult } from "@/lib/billing/stripeBrowser";
 
@@ -30,6 +38,14 @@ export function useInAppSubscription() {
         const userId = user?.id;
         if (!userId) {
           reject(new Error("Sign in to subscribe."));
+          return;
+        }
+        if (user?.billingProvider === "stripe" && isProUser(user) && !user.isAdmin) {
+          reject(
+            new Error(
+              "Your plan is billed through Stripe. Change it from Settings instead of the App Store."
+            )
+          );
           return;
         }
 
@@ -123,8 +139,116 @@ export function useInAppSubscription() {
         })();
       });
     },
-    [user?.id]
+    [user]
   );
 
   return { start, host: null as null };
+}
+
+/**
+ * Sends each active App Store subscription on this device to the server and
+ * finishes it. Returns how many the server accepted.
+ */
+async function syncActiveAppStorePurchases(): Promise<number> {
+  await initConnection();
+  const purchases = await getAvailablePurchases({
+    onlyIncludeActiveItemsIOS: true,
+  });
+  let synced = 0;
+  for (const purchase of purchases ?? []) {
+    const product = appleProductPlan(purchase.productId);
+    const signedTransaction = purchase.purchaseToken?.trim();
+    if (!product || !signedTransaction) continue;
+    try {
+      await billingApi.completeAppStorePurchase(
+        signedTransaction,
+        product.plan,
+        product.interval
+      );
+    } catch {
+      // Another account's purchase, or a plan billed through Stripe.
+      continue;
+    }
+    synced += 1;
+    await finishTransaction({
+      purchase: purchase as Purchase,
+      isConsumable: false,
+    }).catch(() => undefined);
+  }
+  return synced;
+}
+
+/** Restore Purchases button. Asks the App Store to re-sync, then sends results to the server. */
+export async function restoreAppStorePurchases(): Promise<number> {
+  await initConnection();
+  await restorePurchases();
+  return syncActiveAppStorePurchases();
+}
+
+/** Localized App Store price per product id, e.g. "$29.99". Null until loaded. */
+export function useAppStorePrices(): Record<string, string> | null {
+  const [prices, setPrices] = useState<Record<string, string> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        await initConnection();
+        const products = await fetchProducts({
+          skus: APPLE_PRODUCT_SKUS,
+          type: "subs",
+        });
+        const next: Record<string, string> = {};
+        for (const product of products ?? []) {
+          if (product.displayPrice) next[product.id] = product.displayPrice;
+        }
+        if (!cancelled) setPrices(next);
+      } catch {
+        if (!cancelled) setPrices({});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return prices;
+}
+
+/**
+ * Sends the device's active App Store subscription to the server on launch and
+ * when the app returns to the foreground. Records renewals and finishes any
+ * purchase whose first server call failed.
+ */
+export function useAppStoreSync() {
+  const { user, refresh } = useSession();
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    let running = false;
+
+    const run = async () => {
+      if (running) return;
+      running = true;
+      try {
+        const synced = await syncActiveAppStorePurchases();
+        if (synced > 0 && !cancelled) await refresh();
+      } catch {
+        // Store unavailable — try again next time the app is active.
+      } finally {
+        running = false;
+      }
+    };
+
+    void run();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void run();
+    });
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
+  }, [userId, refresh]);
 }
