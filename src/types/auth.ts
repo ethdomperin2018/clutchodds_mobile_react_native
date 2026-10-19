@@ -24,6 +24,11 @@ export type AuthUser = {
   canManageStripeBilling: boolean;
   billingProvider?: "apple" | "stripe" | null;
   proTrialUsed: boolean;
+  /**
+   * First prediction slate date for a new Elite member (US Eastern, YYYY-MM-DD).
+   * Null means the full history is available.
+   */
+  predictionHistoryFrom: string | null;
   isAdmin: boolean;
   accountStatus: UserAccountStatus;
 };

@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.clutchodds.app"
+      "bundleIdentifier": "com.clutchodds.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Clutch Odds uses the camera only if you choose to scan a payment card."
+      }
     },
     "android": {
       "predictiveBackGestureEnabled": false,

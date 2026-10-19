@@ -75,8 +75,11 @@ const EMPTY_RECORD: PredictionHistoryRecord = {
   winRate: null,
 };
 
-export function useModelPredictionsBoard(options: { enabled?: boolean }) {
-  const { enabled = true } = options;
+export function useModelPredictionsBoard(options: {
+  enabled?: boolean;
+  earliestDate?: string | null;
+}) {
+  const { enabled = true, earliestDate = null } = options;
 
   const [slateDate, setSlateDate] = useState(predictionSlateToday);
   const [today, setToday] = useState(predictionSlateToday);
@@ -252,10 +255,20 @@ export function useModelPredictionsBoard(options: { enabled?: boolean }) {
       setSlateDate((current) => {
         const next = shiftSlateDate(current, days);
         if (days > 0 && next > today) return current;
+        if (earliestDate && next < earliestDate) return current;
         return next;
       });
     },
-    [today]
+    [earliestDate, today]
+  );
+
+  const selectSlateDate = useCallback(
+    (next: string) => {
+      if (next > today) return;
+      if (earliestDate && next < earliestDate) return;
+      setSlateDate(next);
+    },
+    [earliestDate, today]
   );
 
   return {
@@ -265,7 +278,8 @@ export function useModelPredictionsBoard(options: { enabled?: boolean }) {
     errorCode,
     nowMs,
     slateDate,
-    setSlateDate,
+    earliestDate,
+    setSlateDate: selectSlateDate,
     today,
     stepSlateDate,
     visibleRecord: loading ? EMPTY_RECORD : visibleRecord,

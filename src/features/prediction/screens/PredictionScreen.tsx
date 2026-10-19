@@ -68,6 +68,7 @@ function PredictionScreenBody({
     useModelPredictionsBoardUi();
   const board = useModelPredictionsBoard({
     enabled: elite && accountActive,
+    earliestDate: user?.predictionHistoryFrom ?? null,
   });
   const openFilters = useCallback(
     () => setFiltersOpen(true),
@@ -133,6 +134,7 @@ function EliteBoardShell({
 
       <PredictionDateCard
         date={board.slateDate}
+        earliest={board.earliestDate}
         loading={board.loading}
         onChange={board.setSlateDate}
         onStep={board.stepSlateDate}

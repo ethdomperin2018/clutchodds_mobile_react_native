@@ -60,6 +60,7 @@ function mockUser(partial: {
     hasSubscriptionRecord: false,
     canManageStripeBilling: false,
     proTrialUsed: false,
+    predictionHistoryFrom: null,
     isAdmin: false,
     accountStatus: "active",
   };

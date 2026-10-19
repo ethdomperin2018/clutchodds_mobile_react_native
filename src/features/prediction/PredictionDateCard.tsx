@@ -17,6 +17,7 @@ const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 export function PredictionDateCard({
   date,
   today,
+  earliest,
   loading,
   record,
   onChange,
@@ -24,6 +25,7 @@ export function PredictionDateCard({
 }: {
   date: string;
   today: string;
+  earliest?: string | null;
   loading: boolean;
   record: PredictionHistoryRecord;
   onChange: (date: string) => void;
@@ -31,14 +33,16 @@ export function PredictionDateCard({
 }) {
   const [open, setOpen] = useState(false);
   const canStepForward = date < today;
+  const canStepBack = !earliest || date > earliest;
 
   return (
     <View style={styles.card}>
       <View style={styles.controls}>
         <Pressable
           accessibilityLabel="Previous day"
+          disabled={!canStepBack}
           onPress={() => onStep(-1)}
-          style={styles.stepBtn}
+          style={[styles.stepBtn, !canStepBack ? styles.stepBtnDisabled : null]}
         >
           <Ionicons color="#D4D4D8" name="chevron-back" size={18} />
         </Pressable>
@@ -80,6 +84,7 @@ export function PredictionDateCard({
 
       <SlateCalendarModal
         date={date}
+        earliest={earliest}
         onClose={() => setOpen(false)}
         onSelect={(next) => {
           onChange(next);
@@ -96,12 +101,14 @@ function SlateCalendarModal({
   open,
   date,
   today,
+  earliest,
   onClose,
   onSelect,
 }: {
   open: boolean;
   date: string;
   today: string;
+  earliest?: string | null;
   onClose: () => void;
   onSelect: (date: string) => void;
 }) {
@@ -143,6 +150,12 @@ function SlateCalendarModal({
   const atCurrentMonth =
     cursor.year > todayParts[0] ||
     (cursor.year === todayParts[0] && cursor.monthIndex >= todayParts[1] - 1);
+  const earliestParts = earliest?.split("-").map(Number);
+  const atEarliestMonth = earliestParts
+    ? cursor.year < earliestParts[0] ||
+      (cursor.year === earliestParts[0] &&
+        cursor.monthIndex <= earliestParts[1] - 1)
+    : false;
 
   return (
     <Modal animationType="fade" onRequestClose={onClose} transparent visible={open}>
@@ -151,6 +164,7 @@ function SlateCalendarModal({
           <View style={styles.monthRow}>
             <Pressable
               accessibilityLabel="Previous month"
+              disabled={atEarliestMonth}
               onPress={() =>
                 setCursor((current) => {
                   const date = new Date(Date.UTC(current.year, current.monthIndex - 1, 1));
@@ -160,7 +174,7 @@ function SlateCalendarModal({
                   };
                 })
               }
-              style={styles.stepBtn}
+              style={[styles.stepBtn, atEarliestMonth ? styles.stepBtnDisabled : null]}
             >
               <Ionicons color="#D4D4D8" name="chevron-back" size={18} />
             </Pressable>
@@ -194,7 +208,7 @@ function SlateCalendarModal({
               if (!value) {
                 return <View key={`empty-${index}`} style={styles.dayCell} />;
               }
-              const disabled = value > today;
+              const disabled = value > today || Boolean(earliest && value < earliest);
               const selected = value === date;
               return (
                 <Pressable
