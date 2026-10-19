@@ -91,6 +91,7 @@ export function PricingScreen() {
     setStatusMessage(null);
     try {
       const restored = await restoreAppStorePurchases();
+      if (restored == null) return;
       const next = await refresh();
       if (restored > 0 && next && isProUser(next)) {
         setStatusMessage(getBillingSuccessMessage(next));

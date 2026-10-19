@@ -28,4 +28,4 @@ export function useAppStorePrices(): Record<string, string> | null {
   return null;
 }
 
-export const restoreAppStorePurchases: (() => Promise<number>) | null = null;
+export const restoreAppStorePurchases: (() => Promise<number | null>) | null = null;

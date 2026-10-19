@@ -74,8 +74,11 @@ export function getBookLogoSource(bookKey: string): {
     return { source: PNG_ASSETS[`${base}-icon`]!, variant: "icon" };
   }
 
-  if (PNG_ASSETS[base] && !WORDMARK_LOGOS.has(base)) {
-    return { source: PNG_ASSETS[base]!, variant: "logo" };
+  if (PNG_ASSETS[base]) {
+    return {
+      source: PNG_ASSETS[base]!,
+      variant: WORDMARK_LOGOS.has(base) ? "icon" : "logo",
+    };
   }
 
   return { source: null, variant: "initials" };

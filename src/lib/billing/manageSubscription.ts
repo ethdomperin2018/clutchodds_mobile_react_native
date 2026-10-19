@@ -13,7 +13,15 @@ export async function openManageSubscription(
   if (user.billingProvider === "apple") {
     if (Platform.OS === "ios") {
       const { showManageSubscriptionsIOS } = await import("expo-iap");
-      await showManageSubscriptionsIOS();
+      try {
+        await showManageSubscriptionsIOS();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error ?? "");
+        if (/request cancel(?:ed|led)|user cancel(?:ed|led)/i.test(message)) {
+          return { status: "cancel" };
+        }
+        throw error;
+      }
       return { status: "success" };
     }
     await Linking.openURL("https://apps.apple.com/account/subscriptions");

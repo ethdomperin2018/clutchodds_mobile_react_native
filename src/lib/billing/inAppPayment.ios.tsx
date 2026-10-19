@@ -26,6 +26,22 @@ import { isProUser } from "@/lib/planAccess";
 import type { BillingInterval } from "@/lib/billing/plans";
 import type { BillingBrowserResult } from "@/lib/billing/stripeBrowser";
 
+function errorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : "";
+  }
+  return "";
+}
+
+/** Apple sign-in dismiss does not always use expo-iap's user-cancelled code. */
+function isStoreCancelled(error: unknown): boolean {
+  if (isUserCancelledError(error)) return true;
+  return /request cancel(?:ed|led)|user cancel(?:ed|led)/i.test(errorText(error));
+}
+
 /**
  * iOS App Store subscriptions. Android keeps the Stripe card sheet.
  */
@@ -98,7 +114,7 @@ export function useInAppSubscription() {
         });
 
         errorSub = purchaseErrorListener((error) => {
-          if (isUserCancelledError(error)) {
+          if (isStoreCancelled(error)) {
             finish({ status: "cancel" });
             return;
           }
@@ -124,7 +140,7 @@ export function useInAppSubscription() {
               type: "subs",
             });
           } catch (error) {
-            if (isUserCancelledError(error)) {
+            if (isStoreCancelled(error)) {
               finish({ status: "cancel" });
               return;
             }
@@ -178,10 +194,18 @@ async function syncActiveAppStorePurchases(): Promise<number> {
   return synced;
 }
 
-/** Restore Purchases button. Asks the App Store to re-sync, then sends results to the server. */
-export async function restoreAppStorePurchases(): Promise<number> {
-  await initConnection();
-  await restorePurchases();
+/**
+ * Restore Purchases button. Asks the App Store to re-sync, then sends results to the server.
+ * Returns null when the person dismisses the Apple sign-in sheet.
+ */
+export async function restoreAppStorePurchases(): Promise<number | null> {
+  try {
+    await initConnection();
+    await restorePurchases();
+  } catch (error) {
+    if (isStoreCancelled(error)) return null;
+    throw error;
+  }
   return syncActiveAppStorePurchases();
 }
 
