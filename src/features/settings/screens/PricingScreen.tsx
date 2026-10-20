@@ -672,6 +672,8 @@ const styles = StyleSheet.create({
   content: {
     gap: 20,
     paddingBottom: 16,
+    width: "100%",
+    alignSelf: "stretch",
   },
   intro: {
     gap: 8,
@@ -963,6 +965,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 8,
     marginTop: 4,
+    width: "100%",
+    alignSelf: "stretch",
   },
   footerLapsed: {
     fontFamily: fonts.sansRegular,
@@ -972,6 +976,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 8,
     marginTop: 4,
+    width: "100%",
+    alignSelf: "stretch",
   },
   footerPro: {
     fontFamily: fonts.sansRegular,
@@ -981,6 +987,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 8,
     marginTop: 4,
+    width: "100%",
+    alignSelf: "stretch",
   },
   footerElite: {
     fontFamily: fonts.sansRegular,
@@ -990,5 +998,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 8,
     marginTop: 4,
+    width: "100%",
+    alignSelf: "stretch",
   },
 });
