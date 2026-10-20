@@ -18,6 +18,7 @@ import {
   useModelPredictionsBoardUi,
 } from "@/features/prediction/ModelPredictionsBoardUiContext";
 import { PredictionDateCard } from "@/features/prediction/PredictionDateCard";
+import { PredictionRefreshControls } from "@/features/prediction/PredictionRefreshControls";
 import { PredictionSportTabs } from "@/features/prediction/PredictionSportTabs";
 import {
   TopPredictionCard,
@@ -140,6 +141,16 @@ function EliteBoardShell({
         onStep={board.stepSlateDate}
         record={board.visibleRecord}
         today={board.today}
+      />
+
+      <PredictionRefreshControls
+        autoRefresh={board.autoRefresh}
+        loading={board.loading || board.refreshing}
+        onAutoRefreshChange={board.setAutoRefresh}
+        onRefresh={board.refreshNow}
+        onRefreshIntervalChange={board.setRefreshIntervalMin}
+        refreshIntervalSec={board.refreshIntervalMin}
+        updatedAgoLabel={board.updatedAgoLabel}
       />
 
       <PredictionSportTabs

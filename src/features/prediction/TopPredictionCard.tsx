@@ -16,7 +16,7 @@ export function TopPredictionCard({
   title: string;
 }) {
   const settled = row.outcome !== "pending";
-  const subline = `${formatKickoffWhen(row.commenceTime, nowMs, settled)} · ${row.sportTitle}`;
+  const subline = `${formatKickoffWhen(row.commenceTime, nowMs, settled, row.sportKey)} · ${row.sportTitle}`;
 
   return (
     <View style={styles.card}>

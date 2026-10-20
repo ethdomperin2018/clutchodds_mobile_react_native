@@ -18,6 +18,23 @@ import {
 export const ALL_SPORTS = "all";
 export const DEFAULT_MIN_EDGE = "all";
 export const DEFAULT_MIN_CONFIDENCE = 0;
+const DEFAULT_REFRESH_MINUTES = 30;
+
+function parseRefreshMinutes(raw: string): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_REFRESH_MINUTES;
+  return Math.floor(n);
+}
+
+function formatUpdatedAgo(ms: number): string {
+  const sec = Math.max(0, Math.floor(ms / 1000));
+  if (sec < 10) return "just now";
+  if (sec < 60) return `${sec} seconds ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min === 1 ? "1 minute ago" : `${min} minutes ago`;
+  const hr = Math.floor(min / 60);
+  return hr === 1 ? "1 hour ago" : `${hr} hours ago`;
+}
 
 export type PredictionSortKey = "win" | "confidence" | "edge" | "start";
 
@@ -93,18 +110,28 @@ export function useModelPredictionsBoard(options: {
   const [minConfidence, setMinConfidence] = useState(DEFAULT_MIN_CONFIDENCE);
   const [search, setSearch] = useState("");
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshIntervalMin, setRefreshIntervalMin] = useState(
+    String(DEFAULT_REFRESH_MINUTES)
+  );
   const [sort, setSort] = useState<PredictionSortKey>("win");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const loadSeqRef = useRef(0);
 
   const load = useCallback(
-    async (date: string) => {
+    async (date: string, mode: "replace" | "refresh" = "replace") => {
       if (!enabled) return;
       const seq = ++loadSeqRef.current;
       const isCurrent = () => loadSeqRef.current === seq;
 
-      setLoading(true);
-      setHistoryRows([]);
+      if (mode === "replace") {
+        setLoading(true);
+        setHistoryRows([]);
+      } else {
+        setRefreshing(true);
+      }
       try {
         const json = await predictionsApi.history(date);
         if (!isCurrent()) return;
@@ -112,15 +139,19 @@ export function useModelPredictionsBoard(options: {
         setErrorCode(undefined);
         setToday(json.today);
         setHistoryRows(json.rows);
+        setLastUpdatedAt(Date.now());
       } catch (e) {
-        if (!isCurrent()) return;
+        if (!isCurrent() || mode === "refresh") return;
         setHistoryRows([]);
         setError(e instanceof Error ? e.message : "Failed to load predictions");
         setErrorCode(e instanceof ApiError ? e.code : undefined);
       } finally {
         if (!isCurrent()) return;
-        setLoading(false);
-        setInitialLoadComplete(true);
+        if (mode === "replace") {
+          setLoading(false);
+          setInitialLoadComplete(true);
+        }
+        setRefreshing(false);
       }
     },
     [enabled]
@@ -134,6 +165,20 @@ export function useModelPredictionsBoard(options: {
     }
     void load(slateDate);
   }, [enabled, load, slateDate]);
+
+  const refreshMinutes = parseRefreshMinutes(refreshIntervalMin);
+
+  useEffect(() => {
+    if (!enabled || !autoRefresh) return;
+    const id = setInterval(() => {
+      void load(slateDate, "refresh");
+    }, refreshMinutes * 60_000);
+    return () => clearInterval(id);
+  }, [enabled, autoRefresh, load, refreshMinutes, slateDate]);
+
+  const refreshNow = useCallback(() => {
+    void load(slateDate, "refresh");
+  }, [load, slateDate]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -302,6 +347,14 @@ export function useModelPredictionsBoard(options: {
     featuredEmptyMessage,
     featuredTitle,
     listEmptyMessage,
+    autoRefresh,
+    setAutoRefresh,
+    refreshIntervalMin,
+    setRefreshIntervalMin,
+    refreshNow,
+    refreshing,
+    updatedAgoLabel:
+      lastUpdatedAt == null ? null : formatUpdatedAgo(nowMs - lastUpdatedAt),
   };
 }
 

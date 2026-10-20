@@ -4,7 +4,6 @@ import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import {
   formatPredictionRecord,
   formatSlateButton,
-  formatSlateLabel,
   formatWinRate,
   predictionSlateToday,
   slateDateFromUtcParts,
@@ -42,9 +41,9 @@ export function PredictionDateCard({
           accessibilityLabel="Previous day"
           disabled={!canStepBack}
           onPress={() => onStep(-1)}
-          style={[styles.stepBtn, !canStepBack ? styles.stepBtnDisabled : null]}
+          style={[styles.cardStepBtn, !canStepBack ? styles.stepBtnDisabled : null]}
         >
-          <Ionicons color="#D4D4D8" name="chevron-back" size={18} />
+          <Ionicons color="#D4D4D8" name="chevron-back" size={14} />
         </Pressable>
         <Pressable
           accessibilityLabel="Prediction date"
@@ -59,27 +58,22 @@ export function PredictionDateCard({
           accessibilityLabel="Next day"
           disabled={!canStepForward}
           onPress={() => onStep(1)}
-          style={[styles.stepBtn, !canStepForward ? styles.stepBtnDisabled : null]}
+          style={[styles.cardStepBtn, !canStepForward ? styles.stepBtnDisabled : null]}
         >
-          <Ionicons color="#D4D4D8" name="chevron-forward" size={18} />
+          <Ionicons color="#D4D4D8" name="chevron-forward" size={14} />
         </Pressable>
       </View>
 
-      <View style={styles.rateRow}>
-        <Text numberOfLines={1} style={styles.dayLabel}>
-          {loading ? "Loading…" : formatSlateLabel(date, today)}
-        </Text>
-        <View style={styles.rateCluster}>
-          <View style={styles.rateMeta}>
-            <Text style={styles.rateLabel}>Win rate</Text>
-            <Text style={styles.rateRecord}>
-              {loading ? "Loading…" : formatPredictionRecord(record)}
-            </Text>
-          </View>
-          <Text style={styles.rateValue}>
-            {loading ? "—" : formatWinRate(record.winRate)}
+      <View style={styles.rateCluster}>
+        <View style={styles.rateMeta}>
+          <Text style={styles.rateLabel}>Win rate</Text>
+          <Text style={styles.rateRecord}>
+            {loading ? "Loading…" : formatPredictionRecord(record, { date, today })}
           </Text>
         </View>
+        <Text style={styles.rateValue}>
+          {loading ? "—" : formatWinRate(record.winRate)}
+        </Text>
       </View>
 
       <SlateCalendarModal
@@ -246,17 +240,33 @@ function SlateCalendarModal({
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     backgroundColor: "#161616",
-    padding: 12,
-    gap: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   controls: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  cardStepBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "#111111",
+    alignItems: "center",
+    justifyContent: "center",
   },
   stepBtn: {
     width: 40,
@@ -272,9 +282,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   dateBtn: {
-    flex: 1,
-    minWidth: 0,
-    height: 40,
+    height: 32,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
@@ -284,31 +292,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   dateBtnText: {
-    width: "100%",
     textAlign: "center",
     fontFamily: fonts.sansSemiBold,
     color: "#E4E4E7",
-    fontSize: 14,
-  },
-  rateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.06)",
-    paddingTop: 12,
-  },
-  dayLabel: {
-    flex: 1,
-    fontFamily: fonts.sansSemiBold,
-    color: "#E4E4E7",
-    fontSize: 14,
+    fontSize: 12,
   },
   rateCluster: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 6,
+    flexShrink: 0,
   },
   rateMeta: {
     alignItems: "flex-end",
@@ -323,14 +316,14 @@ const styles = StyleSheet.create({
   rateValue: {
     fontFamily: fonts.displayBold,
     color: "#FFFFFF",
-    fontSize: 24,
+    fontSize: 20,
     fontVariant: ["tabular-nums"],
   },
   rateRecord: {
     marginTop: 1,
     fontFamily: fonts.sansRegular,
     color: "#A1A1AA",
-    fontSize: 12,
+    fontSize: 11,
   },
   backdrop: {
     flex: 1,

@@ -17,11 +17,11 @@ export function PredictionListCard({
   row: PredictionHistoryRow;
   nowMs: number;
 }) {
-  const label = outcomeLabel(row.outcome, row.commenceTime, nowMs);
+  const label = outcomeLabel(row.outcome, row.commenceTime, nowMs, row.sportKey);
   const score = scoreLabel(row.outcome, row.awayScore, row.homeScore);
   const isLive = row.outcome === "pending" && label === "Live";
   const settled = row.outcome !== "pending";
-  const subline = `${formatKickoffWhen(row.commenceTime, nowMs, settled)} · ${row.sportTitle}`;
+  const subline = `${formatKickoffWhen(row.commenceTime, nowMs, settled, row.sportKey)} · ${row.sportTitle}`;
   const pillText = score ? `${label} ${score}` : label;
 
   return (

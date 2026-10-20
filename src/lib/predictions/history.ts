@@ -100,9 +100,22 @@ export function formatWinRate(winRate: number | null): string {
   return `${winRate.toFixed(1)}%`;
 }
 
-export function formatPredictionRecord(record: PredictionHistoryRecord): string {
+export function formatPredictionRecord(
+  record: PredictionHistoryRecord,
+  options?: { date?: string; today?: string }
+): string {
   const finished = record.wins + record.losses + record.pushes;
-  if (finished === 0) return "No finished games";
+  if (finished === 0) {
+    if (
+      options?.date &&
+      options.today &&
+      options.date < options.today &&
+      record.pending > 0
+    ) {
+      return "Final scores not in yet";
+    }
+    return "No finished games";
+  }
   const base = `${record.wins}–${record.losses}`;
   if (record.pushes === 0) return base;
   const pushLabel = record.pushes === 1 ? "1 push" : `${record.pushes} pushes`;
