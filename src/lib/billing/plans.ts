@@ -80,7 +80,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: "Pro",
     priceLabel: PRO_PRICE_LABEL,
     priceNote: getProTrialPriceNote(),
-    description: `Full scanners, bet log, and performance analytics. ${getProTrialLabel()} with card — cancel anytime before you're charged.`,
+    description: `Full scanners, bet log, and performance analytics. ${getProTrialLabel()} — cancel anytime before you're charged.`,
     perks: [
       `${getProTrialLabel()} with full Pro access`,
       "Live + upcoming Arbitrage scanner",
