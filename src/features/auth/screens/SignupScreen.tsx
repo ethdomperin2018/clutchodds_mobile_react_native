@@ -340,6 +340,7 @@ export function SignupScreen() {
                   onPress={() => void onGooglePress()}
                   style={({ pressed }) => [
                     styles.googleButton,
+                    Platform.OS === "ios" ? styles.googleButtonUnderApple : null,
                     pressed ? styles.pressed : null,
                     googleSubmitting ? styles.disabled : null,
                   ]}
@@ -548,6 +549,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
+  },
+  googleButtonUnderApple: {
+    marginTop: 0,
   },
   googleIcon: {
     width: 18,
