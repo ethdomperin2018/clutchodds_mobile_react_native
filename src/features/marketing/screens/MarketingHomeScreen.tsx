@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppleSignInButton } from "@/features/auth/AppleSignInButton";
 import { useSession } from "@/features/auth/SessionProvider";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -41,11 +42,12 @@ function HeroNetworkEffect() {
 }
 
 export function MarketingHomeScreen() {
-  const { login, signInWithGoogle } = useSession();
+  const { login, signInWithGoogle, signInWithApple } = useSession();
   const { height: windowHeight } = useWindowDimensions();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [appleSubmitting, setAppleSubmitting] = useState(false);
 
   const compact = windowHeight < 720;
   const headlineSize = compact ? 32 : 38;
@@ -80,6 +82,25 @@ export function MarketingHomeScreen() {
       );
     }
   });
+
+  const onApplePress = async () => {
+    setFormError(null);
+    setAppleSubmitting(true);
+    try {
+      const signedIn = await signInWithApple();
+      if (signedIn) {
+        router.replace("/(app)/(tabs)/" as Href);
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in with Apple."
+      );
+    } finally {
+      setAppleSubmitting(false);
+    }
+  };
 
   const onGooglePress = async () => {
     setFormError(null);
@@ -240,8 +261,14 @@ export function MarketingHomeScreen() {
               <View style={[styles.dividerLine, separatorLineStyle]} />
             </View>
 
+            <AppleSignInButton
+              disabled={isSubmitting || googleSubmitting || appleSubmitting}
+              mode="sign-in"
+              onPress={() => void onApplePress()}
+            />
+
             <Pressable
-              disabled={isSubmitting || googleSubmitting}
+              disabled={isSubmitting || googleSubmitting || appleSubmitting}
               onPress={() => void onGooglePress()}
               style={({ pressed }) => [
                 styles.googleButton,

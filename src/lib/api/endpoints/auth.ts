@@ -51,4 +51,9 @@ export const authApi = {
       method: "POST",
       body: { idToken },
     }),
+  appleToken: (identityToken: string, name: string | null) =>
+    apiRequest<AuthResponse>("/api/auth/apple/token", {
+      method: "POST",
+      body: { identityToken, name },
+    }),
 };

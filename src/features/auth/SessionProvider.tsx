@@ -11,6 +11,10 @@ import { env } from "@/config/env";
 import { authApi } from "@/lib/api/endpoints/auth";
 import { queryClient } from "@/lib/query/query-client";
 import {
+  AppleSignInCancelledError,
+  signInWithAppleNative,
+} from "./appleSignIn";
+import {
   GoogleSignInCancelledError,
   GoogleSignInRedirectingError,
   signInWithGoogleBrowser,
@@ -36,6 +40,7 @@ type SessionContextValue = {
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendVerification: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
+  signInWithApple: () => Promise<boolean>;
   completeGoogleSignIn: (sessionToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<AuthUser | null>;
@@ -244,6 +249,27 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   }, [completeGoogleSignIn, persistUser]);
 
+  const signInWithApple = useCallback(async () => {
+    if (env.uiOnly) {
+      await persistUser(
+        mockUser({ email: "apple.user@example.com", name: "Apple User" }),
+        "ui-apple-session"
+      );
+      return true;
+    }
+
+    try {
+      const sessionToken = await signInWithAppleNative();
+      await completeGoogleSignIn(sessionToken);
+      return true;
+    } catch (error) {
+      if (error instanceof AppleSignInCancelledError) {
+        return false;
+      }
+      throw error;
+    }
+  }, [completeGoogleSignIn, persistUser]);
+
   const logout = useCallback(async () => {
     try {
       if (!env.uiOnly) {
@@ -266,6 +292,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       verifyEmail,
       resendVerification,
       signInWithGoogle,
+      signInWithApple,
       completeGoogleSignIn,
       logout,
       refresh,
@@ -279,6 +306,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       verifyEmail,
       resendVerification,
       signInWithGoogle,
+      signInWithApple,
       completeGoogleSignIn,
       logout,
       refresh,

@@ -67,7 +67,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     priceNote: "forever",
     description: "Explore the market and create your account.",
     perks: [
-      "Email or Google sign-in",
+      "Email, Apple, or Google sign-in",
       "Dashboard market snapshot",
       "Public arb overview (read-only pulse)",
       "+EV Value Bets preview (top picks, no book names)",

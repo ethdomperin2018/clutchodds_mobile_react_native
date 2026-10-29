@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppleSignInButton } from "@/features/auth/AppleSignInButton";
 import { useSession } from "@/features/auth/SessionProvider";
 import {
   getPasswordChecks,
@@ -110,10 +111,11 @@ function PasswordCheck({ label, ok }: { label: string; ok: boolean }) {
 }
 
 export function SignupScreen() {
-  const { signup, signInWithGoogle } = useSession();
+  const { signup, signInWithGoogle, signInWithApple } = useSession();
   const { height: windowHeight } = useWindowDimensions();
   const [formError, setFormError] = useState<string | null>(null);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [appleSubmitting, setAppleSubmitting] = useState(false);
   const compact = windowHeight < 760;
 
   const {
@@ -148,6 +150,25 @@ export function SignupScreen() {
       );
     }
   });
+
+  const onApplePress = async () => {
+    setFormError(null);
+    setAppleSubmitting(true);
+    try {
+      const signedIn = await signInWithApple();
+      if (signedIn) {
+        router.replace("/(app)/(tabs)/" as Href);
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in with Apple."
+      );
+    } finally {
+      setAppleSubmitting(false);
+    }
+  };
 
   const onGooglePress = async () => {
     setFormError(null);
@@ -289,7 +310,7 @@ export function SignupScreen() {
                 ) : null}
 
                 <Pressable
-                  disabled={isSubmitting || googleSubmitting}
+                  disabled={isSubmitting || googleSubmitting || appleSubmitting}
                   onPress={() => void onSubmit()}
                   style={({ pressed }) => [
                     styles.primaryButton,
@@ -308,8 +329,14 @@ export function SignupScreen() {
                   <View style={[styles.dividerLine, separatorLineStyle]} />
                 </View>
 
+                <AppleSignInButton
+                  disabled={isSubmitting || googleSubmitting || appleSubmitting}
+                  mode="sign-up"
+                  onPress={() => void onApplePress()}
+                />
+
                 <Pressable
-                  disabled={isSubmitting || googleSubmitting}
+                  disabled={isSubmitting || googleSubmitting || appleSubmitting}
                   onPress={() => void onGooglePress()}
                   style={({ pressed }) => [
                     styles.googleButton,
