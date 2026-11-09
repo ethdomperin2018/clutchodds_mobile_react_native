@@ -1,8 +1,14 @@
-import { Image, Platform, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { env } from "@/config/env";
 
 type SportTabIconId = "all" | "mlb" | "nba" | "nfl" | "nhl";
+
+const LEAGUE_ICONS = {
+  mlb: require("../../assets/leagues/mlb.png"),
+  nba: require("../../assets/leagues/nba.png"),
+  nfl: require("../../assets/leagues/nfl.png"),
+  nhl: require("../../assets/leagues/nhl.png"),
+} as const;
 
 export function sportKeyToTabIcon(sportKey: string): SportTabIconId {
   const key = sportKey.toLowerCase();
@@ -41,12 +47,7 @@ export function SportTabIcon({
     <View style={[styles.wrap, { width: size, height: size }]}>
       <Image
         resizeMode="contain"
-        source={{
-          uri:
-            Platform.OS === "web"
-              ? `/leagues/${icon}.svg`
-              : `${env.apiBaseUrl}/leagues/${icon}.svg`,
-        }}
+        source={LEAGUE_ICONS[icon]}
         style={{ width: size, height: size }}
       />
     </View>
