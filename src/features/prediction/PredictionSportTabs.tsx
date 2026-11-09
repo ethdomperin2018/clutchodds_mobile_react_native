@@ -27,36 +27,31 @@ export function PredictionSportTabs({
               onPress={() => onChange(tab.key)}
               style={styles.tab}
             >
-              <View style={styles.tabInner}>
-                <View style={styles.labelRow}>
+              <View
+                style={[
+                  styles.labelRow,
+                  isActive ? styles.labelRowOn : null,
+                ]}
+              >
+                <View style={styles.iconSlot}>
                   <SportTabIcon
                     color={isActive ? "#FFFFFF" : "#71717A"}
-                    size={16}
+                    size={20}
                     sportKey={tab.key}
                   />
-                  <Text
-                    numberOfLines={1}
-                    style={[styles.tabText, isActive ? styles.tabTextOn : null]}
-                  >
-                    {tab.label}
-                    {counts ? (
-                      <Text
-                        style={[
-                          styles.count,
-                          isActive ? styles.countOn : null,
-                        ]}
-                      >
-                        {` ${counts[tab.key] ?? 0}`}
-                      </Text>
-                    ) : null}
-                  </Text>
                 </View>
-                <View
-                  style={[
-                    styles.underline,
-                    isActive ? styles.underlineOn : null,
-                  ]}
-                />
+                <Text
+                  style={[styles.tabText, isActive ? styles.tabTextOn : null]}
+                >
+                  {tab.label}
+                  {counts ? (
+                    <Text
+                      style={[styles.count, isActive ? styles.countOn : null]}
+                    >
+                      {` ${counts[tab.key] ?? 0}`}
+                    </Text>
+                  ) : null}
+                </Text>
               </View>
             </Pressable>
           );
@@ -82,27 +77,34 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    minWidth: 0,
     alignItems: "center",
-  },
-  tabInner: {
-    maxWidth: "100%",
-    alignItems: "center",
+    justifyContent: "center",
   },
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: 2,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  labelRowOn: {
+    borderBottomColor: colors.primary,
+  },
+  iconSlot: {
+    width: 20,
+    height: 20,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
   tabText: {
     fontFamily: fonts.sansMedium,
     color: "#71717A",
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 20,
     textAlign: "center",
   },
   tabTextOn: {
@@ -112,17 +114,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansMedium,
     color: "#52525B",
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 20,
   },
   countOn: {
     color: "#FFFFFF",
-  },
-  underline: {
-    height: 2,
-    alignSelf: "stretch",
-    backgroundColor: "transparent",
-  },
-  underlineOn: {
-    backgroundColor: colors.primary,
   },
 });
