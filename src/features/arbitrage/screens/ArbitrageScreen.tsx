@@ -342,6 +342,7 @@ function ArbitrageBoard() {
                           ]}
                         >
                           {tab.label}
+                          {board.data ? ` ${board.sportCounts[tab.key] ?? 0}` : ""}
                         </Text>
                       </View>
                     </Pressable>

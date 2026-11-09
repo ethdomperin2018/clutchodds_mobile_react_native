@@ -326,6 +326,15 @@ export function useArbitrageBoard() {
     () => filterArbsByViewTab(arbsForSummary, "upcoming", nowMs).length,
     [arbsForSummary, nowMs]
   );
+  const sportCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const tab of SCANNER_SPORT_TABS) counts[tab.key] = 0;
+    for (const arb of filterArbsByViewTab(arbsForSummary, viewTab, nowMs)) {
+      counts.all += 1;
+      counts[arb.sportKey] = (counts[arb.sportKey] ?? 0) + 1;
+    }
+    return counts;
+  }, [arbsForSummary, nowMs, viewTab]);
   const sortedLiveArbs = useMemo(
     () => sortArbs(liveArbs, arbSort),
     [liveArbs, arbSort]
@@ -495,6 +504,7 @@ export function useArbitrageBoard() {
     upcomingArbs,
     liveArbCount,
     upcomingArbCount,
+    sportCounts,
     listedArbs,
     emptyArbCopy,
     arbsCount: arbs.length,
