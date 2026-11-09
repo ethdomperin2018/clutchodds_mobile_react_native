@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/features/auth/SessionProvider";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { fonts } from "@/theme/typography";
 
 const CODE_LENGTH = 6;
@@ -76,9 +77,7 @@ export function VerifyEmailScreen() {
       setCode("");
       inputRef.current?.focus();
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Unable to resend code."
-      );
+      setFormError(userFacingMessage(error, "Unable to resend code."));
     }
   };
 
@@ -94,9 +93,7 @@ export function VerifyEmailScreen() {
       await verifyEmail(email, code);
       router.replace("/(app)/(tabs)/" as Href);
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Unable to verify email."
-      );
+      setFormError(userFacingMessage(error, "Unable to verify email."));
       setCode("");
       inputRef.current?.focus();
     } finally {

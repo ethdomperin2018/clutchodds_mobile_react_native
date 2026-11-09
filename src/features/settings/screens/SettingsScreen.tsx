@@ -20,6 +20,7 @@ import {
   openSupportEmail,
 } from "@/features/legal/openLegalDocument";
 import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { authApi } from "@/lib/api/endpoints/auth";
 import { useInAppSubscription } from "@/lib/billing/inAppPayment";
 import { openManageSubscription } from "@/lib/billing/manageSubscription";
@@ -172,13 +173,7 @@ function BillingSection({
         setEliteError("Checkout canceled.");
       }
     } catch (err) {
-      setEliteError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error && err.message
-            ? err.message
-            : "Could not start checkout."
-      );
+      setEliteError(userFacingMessage(err, "Could not start checkout."));
     } finally {
       setEliteLoading(false);
     }
@@ -192,11 +187,12 @@ function BillingSection({
       onBillingClosed();
     } catch (err) {
       setPortalError(
-        err instanceof ApiError
-          ? err.message
-          : user.billingProvider === "apple"
+        userFacingMessage(
+          err,
+          user.billingProvider === "apple"
             ? "Could not open subscription settings."
             : "Could not open billing portal."
+        )
       );
     } finally {
       setPortalLoading(false);

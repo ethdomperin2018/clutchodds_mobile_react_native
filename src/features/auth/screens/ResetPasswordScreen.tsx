@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { env } from "@/config/env";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   getPasswordChecks,
   resetPasswordSchema,
@@ -173,9 +174,7 @@ export function ResetPasswordScreen() {
       );
       setTimeout(() => router.replace("/(marketing)"), 1800);
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Unable to update password."
-      );
+      setFormError(userFacingMessage(error, "Unable to update password."));
     }
   });
 

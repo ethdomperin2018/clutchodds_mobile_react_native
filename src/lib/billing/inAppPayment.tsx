@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/endpoints/billing";
 import type { BillingInterval } from "@/lib/billing/plans";
 import type { BillingBrowserResult } from "@/lib/billing/stripeBrowser";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 
 type SheetSession = {
   publishableKey: string;
@@ -199,10 +200,7 @@ function PaymentSheetRunner({
       } catch (error) {
         onFinish({
           status: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Could not start checkout.",
+          message: userFacingMessage(error, "Could not start checkout."),
         });
       }
     }

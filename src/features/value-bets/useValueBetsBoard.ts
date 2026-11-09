@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { betsApi } from "@/lib/api/endpoints/bets";
 import { oddsApi } from "@/lib/api/endpoints/odds";
 import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
@@ -197,8 +198,7 @@ export function useValueBetsBoard(options: {
       setLastUpdatedAt(Date.now());
     } catch (e) {
       if (refresh && (await refreshAuthIfProDenied(e, refresh))) return;
-      const message =
-        e instanceof Error ? e.message : "Failed to load Value Bets";
+      const message = userFacingMessage(e, "Failed to load Value Bets");
       setError(message);
       setErrorCode(e instanceof ApiError ? e.code : undefined);
       setAllPicks([]);
@@ -426,7 +426,7 @@ export function useValueBetsBoard(options: {
         }, 400);
         return true;
       } catch (e) {
-        const message = e instanceof Error ? e.message : "Failed to log pick.";
+        const message = userFacingMessage(e, "Failed to log pick.");
         if (message.includes("already in your bet log")) {
           setLoggedPickKeys((prev) => new Set(prev).add(key));
           setToast({

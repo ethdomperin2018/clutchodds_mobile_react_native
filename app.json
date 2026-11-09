@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Clutch Odds Mobile",
-    "slug": "clutch-odds-mobile",
+    "name": "Clutch Odds",
+    "slug": "clutch-odds",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "clutchodds",

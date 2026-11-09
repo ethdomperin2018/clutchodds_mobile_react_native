@@ -27,8 +27,9 @@ import {
   openPrivacyPolicy,
   openTermsOfService,
 } from "@/features/legal/openLegalDocument";
-import { fonts } from "@/theme/typography";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { separatorLineStyle } from "@/theme/separator";
+import { fonts } from "@/theme/typography";
 
 const googleIcon = require("../../../../assets/images/google-g.png");
 
@@ -145,9 +146,7 @@ export function SignupScreen() {
         params: { email: result.requiresVerification ? result.email : values.email },
       });
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Unable to create account."
-      );
+      setFormError(userFacingMessage(error, "Unable to create account."));
     }
   });
 
@@ -160,11 +159,7 @@ export function SignupScreen() {
         router.replace("/(app)/(tabs)/" as Href);
       }
     } catch (error) {
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in with Apple."
-      );
+      setFormError(userFacingMessage(error, "Unable to sign in with Apple."));
     } finally {
       setAppleSubmitting(false);
     }
@@ -179,11 +174,7 @@ export function SignupScreen() {
         router.replace("/(app)/(tabs)/" as Href);
       }
     } catch (error) {
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in with Google."
-      );
+      setFormError(userFacingMessage(error, "Unable to sign in with Google."));
     } finally {
       setGoogleSubmitting(false);
     }

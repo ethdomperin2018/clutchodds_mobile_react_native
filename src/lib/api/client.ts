@@ -40,6 +40,15 @@ async function readErrorPayload(response: Response): Promise<ApiErrorPayload> {
 }
 
 const DEFAULT_TIMEOUT_MS = 20_000;
+const CONNECTION_ERROR =
+  "Could not connect. Check your internet connection and try again.";
+
+function isConnectionFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /fetch failed|network request failed|tls|secure connection|offline|internet/i.test(
+    message
+  );
+}
 
 export async function apiRequest<T>(
   path: string,
@@ -85,11 +94,16 @@ export async function apiRequest<T>(
     }
 
     if (error instanceof Error && error.name === "AbortError") {
-      throw new ApiError("Request timed out. Is the API running?", 408);
+      throw new ApiError(
+        "The request timed out. Check your connection and try again.",
+        408
+      );
     }
 
     throw new ApiError(
-      error instanceof Error ? error.message : "Network request failed.",
+      isConnectionFailure(error)
+        ? CONNECTION_ERROR
+        : "Something went wrong. Please try again.",
       0
     );
   } finally {

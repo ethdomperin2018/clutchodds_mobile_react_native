@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { predictionsApi } from "@/lib/api/endpoints/predictions";
 import { buildModelPredictionsListEmptyCopy } from "@/lib/modelPredictions/emptyCopy";
 import { SCANNER_SPORT_TABS } from "@/lib/scanner/sportTabs";
@@ -155,7 +156,7 @@ export function useModelPredictionsBoard(options: {
       } catch (e) {
         if (!isCurrent() || mode === "refresh") return;
         setHistoryRows([]);
-        setError(e instanceof Error ? e.message : "Failed to load predictions");
+        setError(userFacingMessage(e, "Failed to load predictions"));
         setErrorCode(e instanceof ApiError ? e.code : undefined);
       } finally {
         if (!isCurrent()) return;

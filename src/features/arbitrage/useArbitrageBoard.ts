@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { useSession } from "@/features/auth/SessionProvider";
 import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { betsApi } from "@/lib/api/endpoints/bets";
 import { oddsApi } from "@/lib/api/endpoints/odds";
 import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
@@ -232,7 +233,7 @@ export function useArbitrageBoard() {
       setLastUpdatedAt(Date.now());
     } catch (e) {
       if (await refreshAuthIfProDenied(e, refresh)) return;
-      const message = e instanceof Error ? e.message : "Failed to load odds";
+      const message = userFacingMessage(e, "Failed to load odds");
       const code = e instanceof ApiError ? e.code : undefined;
       setData({ error: message, errorCode: code });
     } finally {
@@ -408,7 +409,7 @@ export function useArbitrageBoard() {
       setRecalcByEvent((prev) => ({
         ...prev,
         [eventId]: {
-          error: e instanceof Error ? e.message : "Recalculate failed",
+          error: userFacingMessage(e, "Recalculate failed"),
         },
       }));
     } finally {
@@ -430,7 +431,7 @@ export function useArbitrageBoard() {
       }, 400);
       return true;
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to log bet.";
+      const message = userFacingMessage(e, "Failed to log bet.");
       if (message.includes("already in your bet log")) {
         setLoggedEventIds((prev) => new Set(prev).add(arb.eventId));
         setLogError({

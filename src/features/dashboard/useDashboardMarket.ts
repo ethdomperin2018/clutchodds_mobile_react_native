@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { oddsApi } from "@/lib/api/endpoints/odds";
 import { predictionsApi } from "@/lib/api/endpoints/predictions";
 import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import type {
   PublicArbTeaser,
   PublicLineShopTeaser,
@@ -248,14 +249,13 @@ export function useDashboardMarket(options: {
   const refreshing =
     (pro ? lightQuery.isFetching : snapshotQuery.isFetching) && Boolean(market);
 
-  const networkError =
-    pro
-      ? lightQuery.error instanceof Error
-        ? lightQuery.error.message
-        : null
-      : snapshotQuery.error instanceof Error
-        ? snapshotQuery.error.message
-        : null;
+  const queryError = pro ? lightQuery.error : snapshotQuery.error;
+  const networkError = queryError
+    ? userFacingMessage(
+        queryError,
+        "Could not connect. Check your internet connection and try again."
+      )
+    : null;
 
   const error = market?.error ?? networkError;
   const errorCode = market?.errorCode;

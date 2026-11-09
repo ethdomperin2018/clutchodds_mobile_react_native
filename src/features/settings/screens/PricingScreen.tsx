@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppScreen } from "@/components/layout/AppScreen";
 import { useSession } from "@/features/auth/SessionProvider";
 import type { CheckoutPlan } from "@/lib/api/endpoints/billing";
-import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   openPrivacyPolicy,
   openTermsOfService,
@@ -101,11 +101,7 @@ export function PricingScreen() {
         );
       }
     } catch (err) {
-      setError(
-        err instanceof Error && err.message
-          ? err.message
-          : "Could not restore purchases."
-      );
+      setError(userFacingMessage(err, "Could not restore purchases."));
     } finally {
       setRestoring(false);
     }
@@ -140,11 +136,12 @@ export function PricingScreen() {
         await refresh();
       } catch (err) {
         setError(
-          err instanceof ApiError
-            ? err.message
-            : user.billingProvider === "apple"
+          userFacingMessage(
+            err,
+            user.billingProvider === "apple"
               ? "Could not open subscription settings."
               : "Could not open billing portal."
+          )
         );
       } finally {
         setPortalLoading(false);
@@ -164,13 +161,7 @@ export function PricingScreen() {
         await refresh();
       }
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error && err.message
-            ? err.message
-            : "Could not start checkout."
-      );
+      setError(userFacingMessage(err, "Could not start checkout."));
     } finally {
       setLoadingPlan(null);
     }

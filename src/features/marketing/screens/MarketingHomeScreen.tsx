@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppleSignInButton } from "@/features/auth/AppleSignInButton";
 import { useSession } from "@/features/auth/SessionProvider";
 import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   loginSchema,
   type LoginFormValues,
@@ -77,9 +78,7 @@ export function MarketingHomeScreen() {
         });
         return;
       }
-      setFormError(
-        error instanceof Error ? error.message : "Unable to sign in."
-      );
+      setFormError(userFacingMessage(error, "Unable to sign in."));
     }
   });
 
@@ -92,11 +91,7 @@ export function MarketingHomeScreen() {
         router.replace("/(app)/(tabs)/" as Href);
       }
     } catch (error) {
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in with Apple."
-      );
+      setFormError(userFacingMessage(error, "Unable to sign in with Apple."));
     } finally {
       setAppleSubmitting(false);
     }
@@ -111,9 +106,7 @@ export function MarketingHomeScreen() {
         router.replace("/(app)/(tabs)/" as Href);
       }
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Unable to sign in with Google."
-      );
+      setFormError(userFacingMessage(error, "Unable to sign in with Google."));
     } finally {
       setGoogleSubmitting(false);
     }

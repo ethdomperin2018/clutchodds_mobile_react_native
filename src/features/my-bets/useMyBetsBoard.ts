@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/client";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import { betsApi } from "@/lib/api/endpoints/bets";
 import type { ManualBetResult, ManualBetRow } from "@/lib/api/types";
 import { refreshAuthIfProDenied } from "@/lib/auth/subscriptionRefresh";
@@ -36,13 +36,7 @@ export function useMyBetsBoard(options: {
     } catch (e) {
       if (refresh && (await refreshAuthIfProDenied(e, refresh))) return;
       setBets([]);
-      setError(
-        e instanceof ApiError
-          ? e.message
-          : e instanceof Error
-            ? e.message
-            : "Failed to load bets"
-      );
+      setError(userFacingMessage(e, "Failed to load bets"));
     } finally {
       setLoading(false);
       setInitialLoadComplete(true);
@@ -87,12 +81,7 @@ export function useMyBetsBoard(options: {
         );
         if (refresh && (await refreshAuthIfProDenied(e, refresh))) return false;
         setToast({
-          message:
-            e instanceof ApiError
-              ? e.message
-              : e instanceof Error
-                ? e.message
-                : "Failed to update result. Please try again.",
+          message: userFacingMessage(e, "Failed to update result. Please try again."),
           variant: "error",
         });
         return false;

@@ -16,7 +16,7 @@ import { OddsApiErrorBanner } from "@/components/ui/OddsApiErrorBanner";
 import { AccountInactiveNotice } from "@/features/auth/AccountInactiveNotice";
 import { useSession } from "@/features/auth/SessionProvider";
 import { ValueBetDetailModal } from "@/features/value-bets/ValueBetDetailModal";
-import { ValueBetMobileCard } from "@/features/value-bets/ValueBetMobileCard";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   ValueBetsBoardUiProvider,
   useValueBetsBoardUi,
@@ -246,7 +246,7 @@ function ProBoardShell({
       setLogError(null);
       return (await board.logPick(logConfirmPick, stake)) === true;
     } catch (e) {
-      setLogError(e instanceof Error ? e.message : "Failed to log pick");
+      setLogError(userFacingMessage(e, "Failed to log pick"));
       return false;
     }
   }, [logConfirmPick, logConfirmKey, getStakeInput, board.logPick]);

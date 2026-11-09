@@ -13,10 +13,7 @@ import {
   type Purchase,
 } from "expo-iap";
 import { useSession } from "@/features/auth/SessionProvider";
-import {
-  billingApi,
-  type CheckoutPlan,
-} from "@/lib/api/endpoints/billing";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   APPLE_PRODUCT_SKUS,
   appleProductId,
@@ -104,10 +101,10 @@ export function useInAppSubscription() {
             } catch (error) {
               finish({
                 status: "error",
-                message:
-                  error instanceof Error
-                    ? error.message
-                    : "Could not finish the App Store purchase.",
+                message: userFacingMessage(
+                  error,
+                  "Could not finish the App Store purchase."
+                ),
               });
             }
           })();
@@ -120,7 +117,7 @@ export function useInAppSubscription() {
           }
           finish({
             status: "error",
-            message: error.message || "App Store purchase failed.",
+            message: userFacingMessage(error, "App Store purchase failed."),
           });
         });
 
@@ -146,10 +143,10 @@ export function useInAppSubscription() {
             }
             finish({
               status: "error",
-              message:
-                error instanceof Error
-                  ? error.message
-                  : "Could not start the App Store purchase.",
+              message: userFacingMessage(
+                error,
+                "Could not start the App Store purchase."
+              ),
             });
           }
         })();

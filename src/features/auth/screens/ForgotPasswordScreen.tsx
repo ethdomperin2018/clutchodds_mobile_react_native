@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { env } from "@/config/env";
+import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -55,11 +56,7 @@ export function ForgotPasswordScreen() {
           "If an account exists with that email, we sent a password reset link."
       );
     } catch (error) {
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : "Unable to send reset link."
-      );
+      setFormError(userFacingMessage(error, "Unable to send reset link."));
     }
   });
 
