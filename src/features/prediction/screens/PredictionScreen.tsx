@@ -155,6 +155,7 @@ function EliteBoardShell({
 
       <PredictionSportTabs
         active={board.sportTab}
+        counts={board.loading ? undefined : board.sportCounts}
         onChange={board.setSportTab}
       />
 

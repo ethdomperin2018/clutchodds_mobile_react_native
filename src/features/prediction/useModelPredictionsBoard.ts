@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
 import { predictionsApi } from "@/lib/api/endpoints/predictions";
 import { buildModelPredictionsListEmptyCopy } from "@/lib/modelPredictions/emptyCopy";
+import { SCANNER_SPORT_TABS } from "@/lib/scanner/sportTabs";
 import {
   predictionSlateToday,
   shiftSlateDate,
@@ -24,6 +25,17 @@ function parseRefreshMinutes(raw: string): number {
   const n = Number(raw);
   if (!Number.isFinite(n) || n < 1) return DEFAULT_REFRESH_MINUTES;
   return Math.floor(n);
+}
+
+function rowPassesBoardFilters(
+  row: PredictionHistoryRow,
+  minConfidence: number,
+  minEdge: string
+): boolean {
+  if (!meetsMinConfidence(row.confidenceScore, minConfidence)) return false;
+  if (minEdge === "all") return true;
+  if (row.modelEdge == null) return false;
+  return meetsModelEdgeMin(row.modelEdge, minEdge);
 }
 
 function formatUpdatedAgo(ms: number): string {
@@ -196,13 +208,21 @@ export function useModelPredictionsBoard(options: {
     [sportScopedRows]
   );
 
+  const sportCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const tab of SCANNER_SPORT_TABS) counts[tab.key] = 0;
+    for (const row of historyRows) {
+      if (!rowPassesBoardFilters(row, minConfidence, minEdge)) continue;
+      counts.all = (counts.all ?? 0) + 1;
+      counts[row.sportKey] = (counts[row.sportKey] ?? 0) + 1;
+    }
+    return counts;
+  }, [historyRows, minConfidence, minEdge]);
+
   const filteredRows = useMemo(() => {
-    return sportScopedRows.filter((row) => {
-      if (!meetsMinConfidence(row.confidenceScore, minConfidence)) return false;
-      if (minEdge === "all") return true;
-      if (row.modelEdge == null) return false;
-      return meetsModelEdgeMin(row.modelEdge, minEdge);
-    });
+    return sportScopedRows.filter((row) =>
+      rowPassesBoardFilters(row, minConfidence, minEdge)
+    );
   }, [sportScopedRows, minConfidence, minEdge]);
 
   const featuredEmptyMessage =
@@ -330,6 +350,7 @@ export function useModelPredictionsBoard(options: {
     visibleRecord: loading ? EMPTY_RECORD : visibleRecord,
     sportTab,
     setSportTab,
+    sportCounts,
     minEdge,
     setMinEdge,
     minConfidence,

@@ -142,7 +142,9 @@ export function PricingScreen() {
         setError(
           err instanceof ApiError
             ? err.message
-            : "Could not open billing portal."
+            : user.billingProvider === "apple"
+              ? "Could not open subscription settings."
+              : "Could not open billing portal."
         );
       } finally {
         setPortalLoading(false);

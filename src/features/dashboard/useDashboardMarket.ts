@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { oddsApi } from "@/lib/api/endpoints/odds";
+import { predictionsApi } from "@/lib/api/endpoints/predictions";
 import { ApiError } from "@/lib/api/client";
 import type {
   PublicArbTeaser,
@@ -21,6 +22,7 @@ import {
   type SportPredictionLookupResult,
 } from "@/lib/predictions/rows";
 import { isEligibleSportPredictionWindow } from "@/lib/predictions/window";
+import { predictionSlateToday } from "@/lib/predictions/history";
 import { usePollingQuery } from "@/lib/query/use-polling-query";
 import type { AuthUser } from "@/types/auth";
 
@@ -74,11 +76,42 @@ export function useDashboardMarket(options: {
     Record<string, SportPredictionLookupResult | null>
   >({});
   const [predictionsLoading, setPredictionsLoading] = useState(false);
+  const [slatePredictionCount, setSlatePredictionCount] = useState<
+    number | null
+  >(null);
+  const [slateCountSettled, setSlateCountSettled] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!elite || !pro) {
+      setSlatePredictionCount(null);
+      setSlateCountSettled(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadSlateCount = async () => {
+      try {
+        const history = await predictionsApi.history(predictionSlateToday());
+        if (!cancelled) setSlatePredictionCount(history.rows.length);
+      } catch {
+        // Keep the last slate count. The predictions page uses this same request.
+      } finally {
+        if (!cancelled) setSlateCountSettled(true);
+      }
+    };
+
+    void loadSlateCount();
+    const id = setInterval(loadSlateCount, REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [elite, pro]);
 
   const snapshotQuery = usePollingQuery({
     queryKey: ["odds", "snapshot", "dashboard"],
@@ -244,6 +277,8 @@ export function useDashboardMarket(options: {
     errorTitle,
     predictionRows,
     predictionsLoading: showPredictionSkeleton,
-    modelPredictionCount: allPredictionRows.length,
+    modelPredictionCount:
+      slatePredictionCount ?? (slateCountSettled ? allPredictionRows.length : 0),
+    slateCountLoading: elite && pro && !slateCountSettled,
   };
 }

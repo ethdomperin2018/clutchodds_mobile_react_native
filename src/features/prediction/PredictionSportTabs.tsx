@@ -9,9 +9,11 @@ import { fonts } from "@/theme/typography";
  */
 export function PredictionSportTabs({
   active,
+  counts,
   onChange,
 }: {
   active: string;
+  counts?: Record<string, number>;
   onChange: (key: string) => void;
 }) {
   return (
@@ -37,6 +39,16 @@ export function PredictionSportTabs({
                 >
                   {tab.label}
                 </Text>
+                {counts ? (
+                  <Text
+                    style={[
+                      styles.count,
+                      isActive ? styles.countOn : null,
+                    ]}
+                  >
+                    {counts[tab.key] ?? 0}
+                  </Text>
+                ) : null}
               </View>
               <View
                 style={[
@@ -86,6 +98,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   tabTextOn: {
+    color: "#FFFFFF",
+  },
+  count: {
+    fontFamily: fonts.sansMedium,
+    color: "#52525B",
+    fontSize: 11,
+    fontVariant: ["tabular-nums"],
+  },
+  countOn: {
     color: "#FFFFFF",
   },
   underline: {

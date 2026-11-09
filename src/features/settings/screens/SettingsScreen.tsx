@@ -11,8 +11,14 @@ import {
 import { AppScreen } from "@/components/layout/AppScreen";
 import { pageHeaderStyles } from "@/components/layout/pageHeaderStyles";
 import { TelegramIcon } from "@/components/icons/TelegramIcon";
+import { DiscordIcon } from "@/components/icons/DiscordIcon";
 import { useSession } from "@/features/auth/SessionProvider";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
+import {
+  openDiscord,
+  openFaq,
+  openSupportEmail,
+} from "@/features/legal/openLegalDocument";
 import { ApiError } from "@/lib/api/client";
 import { authApi } from "@/lib/api/endpoints/auth";
 import { useInAppSubscription } from "@/lib/billing/inAppPayment";
@@ -42,6 +48,7 @@ import {
   needsPaymentUpdate,
 } from "@/lib/subscriptionMessaging";
 import type { AuthUser } from "@/types/auth";
+import { env } from "@/config/env";
 import { colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -58,7 +65,7 @@ export function SettingsScreen() {
       <View style={pageHeaderStyles.header}>
         <Text style={pageHeaderStyles.title}>Settings</Text>
         <Text allowFontScaling={false} style={pageHeaderStyles.subtitle}>
-          Account, billing, Telegram alerts, and where to adjust scanner
+          Account, billing, help, Telegram alerts, and where to adjust scanner
           defaults.
         </Text>
       </View>
@@ -77,6 +84,7 @@ export function SettingsScreen() {
             }}
           />
           <TourSection onReplay={() => void replayTour()} />
+          <HelpSection />
           <ScannerDefaultsSection />
           <DeleteAccountSection
             email={user.email}
@@ -186,7 +194,9 @@ function BillingSection({
       setPortalError(
         err instanceof ApiError
           ? err.message
-          : "Could not open billing portal."
+          : user.billingProvider === "apple"
+            ? "Could not open subscription settings."
+            : "Could not open billing portal."
       );
     } finally {
       setPortalLoading(false);
@@ -205,8 +215,9 @@ function BillingSection({
       {pro && paymentFailed ? (
         <View style={styles.lapsedBanner}>
           <Text style={styles.lapsedText}>
-            Payment failed — update your card in the billing portal to avoid
-            losing access.
+            {user.billingProvider === "apple"
+              ? "Payment failed — update the payment method on your Apple Account to avoid losing access."
+              : "Payment failed — update your card in the billing portal to avoid losing access."}
           </Text>
         </View>
       ) : null}
@@ -460,6 +471,41 @@ function SessionSection({
           <Text style={styles.ghostBtnText}>Log out</Text>
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+function HelpSection() {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Help</Text>
+      <Text style={styles.cardCopy}>
+        Questions about the product, your account, or billing.
+      </Text>
+      <Pressable
+        onPress={() => void openFaq()}
+        style={({ pressed }) => [styles.helpRow, pressed ? styles.pressed : null]}
+      >
+        <Text style={styles.helpRowText}>FAQ</Text>
+      </Pressable>
+      <Pressable
+        onPress={() => void openSupportEmail()}
+        style={({ pressed }) => [styles.helpRow, pressed ? styles.pressed : null]}
+      >
+        <Text style={styles.helpRowText}>Email: {env.supportEmail}</Text>
+      </Pressable>
+      {env.discordInviteUrl ? (
+        <Pressable
+          onPress={() => void openDiscord()}
+          style={({ pressed }) => [
+            styles.helpRow,
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          <DiscordIcon size={18} />
+          <Text style={styles.helpRowText}>Discord</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -950,6 +996,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: "uppercase",
+  },
+  helpRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  helpRowText: {
+    fontFamily: fonts.sansMedium,
+    color: "#FFFFFF",
+    fontSize: 14,
   },
   pressed: {
     opacity: 0.85,

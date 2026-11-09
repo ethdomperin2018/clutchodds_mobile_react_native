@@ -116,6 +116,19 @@ const configuredWebBaseUrl =
   process.env.EXPO_PUBLIC_WEB_BASE_URL?.trim() || DEFAULT_WEB_BASE_URL;
 const webBaseUrl = rewriteLoopbackForNative(configuredWebBaseUrl);
 
+function discordInviteUrl(): string | null {
+  const url =
+    process.env.EXPO_PUBLIC_DISCORD_INVITE_URL?.trim() ||
+    "https://discord.gg/HcrXPZ3aHT";
+  if (
+    url.startsWith("https://discord.gg/") ||
+    url.startsWith("https://discord.com/invite/")
+  ) {
+    return url;
+  }
+  return null;
+}
+
 function priceAmount(
   envKey: string,
   extraKey:
@@ -139,6 +152,10 @@ export const env = {
   /** Canonical web legal pages — do not duplicate copy in the app. */
   termsUrl: `${webBaseUrl}/terms`,
   privacyUrl: `${webBaseUrl}/privacy`,
+  faqUrl: `${webBaseUrl}/faq`,
+  supportEmail:
+    process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() || "support@clutchodds.com",
+  discordInviteUrl: discordInviteUrl(),
   appName: "Clutch Odds Mobile",
   uiOnly,
   proPriceAmount: priceAmount(

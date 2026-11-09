@@ -626,6 +626,7 @@ export function DashboardScreen() {
     errorTitle,
     predictionRows,
     predictionsLoading,
+    slateCountLoading,
     modelPredictionCount,
   } = useDashboardMarket({
     ready: ready && accountActive,
@@ -801,7 +802,7 @@ export function DashboardScreen() {
           liveCount={liveCount}
           loading={loading}
           predictionCount={modelPredictionCount}
-          predictionLoading={predictionsLoading}
+          predictionLoading={slateCountLoading || predictionsLoading}
           resetKey={market?.fetchedAt}
           upcomingCount={upcomingCount}
         />
