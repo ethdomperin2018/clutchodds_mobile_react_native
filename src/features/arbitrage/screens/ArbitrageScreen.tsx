@@ -323,24 +323,26 @@ function ArbitrageBoard() {
                       style={styles.sportTab}
                     >
                       <View style={styles.sportTabInner}>
-                        <SportTabIcon
-                          color={active ? "#FFFFFF" : "#71717A"}
-                          size={20}
-                          sportKey={tab.key}
+                        <View style={styles.sportTabLabel}>
+                          <SportTabIcon
+                            color={active ? "#FFFFFF" : "#71717A"}
+                            size={16}
+                            sportKey={tab.key}
+                          />
+                          <Text
+                            numberOfLines={1}
+                            style={[styles.sportTabText, active ? styles.sportTabOn : null]}
+                          >
+                            {tab.label}
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.sportUnderline,
+                            active ? styles.sportUnderlineOn : null,
+                          ]}
                         />
-                        <Text
-                          numberOfLines={1}
-                          style={[styles.sportTabText, active ? styles.sportTabOn : null]}
-                        >
-                          {tab.label}
-                        </Text>
                       </View>
-                      <View
-                        style={[
-                          styles.sportUnderline,
-                          active ? styles.sportUnderlineOn : null,
-                        ]}
-                      />
                     </Pressable>
                   );
                 })}
@@ -1311,14 +1313,18 @@ const styles = StyleSheet.create({
   sportTab: {
     flex: 1,
     minWidth: 0,
-    alignItems: "stretch",
+    alignItems: "center",
   },
   sportTabInner: {
+    maxWidth: "100%",
+    alignItems: "center",
+  },
+  sportTabLabel: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     paddingTop: 8,
     paddingBottom: 8,
   },
@@ -1326,13 +1332,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansMedium,
     color: "#71717A",
     fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center",
   },
   sportTabOn: {
     color: "#FFFFFF",
   },
   sportUnderline: {
     height: 2,
-    width: "100%",
+    alignSelf: "stretch",
     backgroundColor: "transparent",
   },
   sportUnderlineOn: {

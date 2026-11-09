@@ -28,34 +28,36 @@ export function PredictionSportTabs({
               style={styles.tab}
             >
               <View style={styles.tabInner}>
-                <SportTabIcon
-                  color={isActive ? "#FFFFFF" : "#71717A"}
-                  size={20}
-                  sportKey={tab.key}
-                />
-                <Text
-                  numberOfLines={1}
-                  style={[styles.tabText, isActive ? styles.tabTextOn : null]}
-                >
-                  {tab.label}
-                </Text>
-                {counts ? (
+                <View style={styles.labelRow}>
+                  <SportTabIcon
+                    color={isActive ? "#FFFFFF" : "#71717A"}
+                    size={16}
+                    sportKey={tab.key}
+                  />
                   <Text
-                    style={[
-                      styles.count,
-                      isActive ? styles.countOn : null,
-                    ]}
+                    numberOfLines={1}
+                    style={[styles.tabText, isActive ? styles.tabTextOn : null]}
                   >
-                    {counts[tab.key] ?? 0}
+                    {tab.label}
+                    {counts ? (
+                      <Text
+                        style={[
+                          styles.count,
+                          isActive ? styles.countOn : null,
+                        ]}
+                      >
+                        {` ${counts[tab.key] ?? 0}`}
+                      </Text>
+                    ) : null}
                   </Text>
-                ) : null}
+                </View>
+                <View
+                  style={[
+                    styles.underline,
+                    isActive ? styles.underlineOn : null,
+                  ]}
+                />
               </View>
-              <View
-                style={[
-                  styles.underline,
-                  isActive ? styles.underlineOn : null,
-                ]}
-              />
             </Pressable>
           );
         })}
@@ -81,9 +83,13 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     minWidth: 0,
-    alignItems: "stretch",
+    alignItems: "center",
   },
   tabInner: {
+    maxWidth: "100%",
+    alignItems: "center",
+  },
+  labelRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -96,6 +102,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansMedium,
     color: "#71717A",
     fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center",
   },
   tabTextOn: {
     color: "#FFFFFF",
@@ -103,15 +111,15 @@ const styles = StyleSheet.create({
   count: {
     fontFamily: fonts.sansMedium,
     color: "#52525B",
-    fontSize: 11,
-    fontVariant: ["tabular-nums"],
+    fontSize: 12,
+    lineHeight: 16,
   },
   countOn: {
     color: "#FFFFFF",
   },
   underline: {
     height: 2,
-    width: "100%",
+    alignSelf: "stretch",
     backgroundColor: "transparent",
   },
   underlineOn: {
