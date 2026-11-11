@@ -29,6 +29,7 @@ export type AuthUser = {
    * Null means the full history is available.
    */
   predictionHistoryFrom: string | null;
+  discordLinked?: boolean;
   isAdmin: boolean;
   accountStatus: UserAccountStatus;
 };

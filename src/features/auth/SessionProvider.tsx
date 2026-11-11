@@ -66,6 +66,7 @@ function mockUser(partial: {
     canManageStripeBilling: false,
     proTrialUsed: false,
     predictionHistoryFrom: null,
+    discordLinked: false,
     isAdmin: false,
     accountStatus: "active",
   };

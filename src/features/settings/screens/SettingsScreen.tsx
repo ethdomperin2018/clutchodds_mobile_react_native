@@ -31,6 +31,11 @@ import {
   DEFAULT_POLL_INTERVAL_SEC,
 } from "@/lib/odds/refreshInterval";
 import { openPricing, openTelegramChannel } from "@/lib/openLinks";
+import {
+  connectDiscord,
+  DiscordConnectCancelledError,
+  disconnectDiscord,
+} from "@/features/settings/connectDiscord";
 import { isEliteUser, isProUser } from "@/lib/planAccess";
 import {
   canUpgradeToElite,
@@ -74,6 +79,7 @@ export function SettingsScreen() {
       {ready && user ? (
         <>
           <BillingSection user={user} onBillingClosed={() => void refresh()} />
+          <DiscordSection user={user} onChanged={() => void refresh()} />
           <TelegramSection user={user} />
           <SessionSection
             user={user}
@@ -467,6 +473,70 @@ function SessionSection({
           <Text style={styles.ghostBtnText}>Log out</Text>
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+function DiscordSection({
+  user,
+  onChanged,
+}: {
+  user: AuthUser;
+  onChanged: () => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function connect() {
+    setPending(true);
+    setMessage(null);
+    try {
+      await connectDiscord();
+      onChanged();
+      setMessage("Discord is connected. We sent the invite to your email.");
+    } catch (error) {
+      if (error instanceof DiscordConnectCancelledError) return;
+      setMessage(userFacingMessage(error, "Could not connect Discord."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function disconnect() {
+    setPending(true);
+    setMessage(null);
+    try {
+      await disconnectDiscord();
+      onChanged();
+      setMessage("Discord is disconnected.");
+    } catch (error) {
+      setMessage(userFacingMessage(error, "Could not disconnect Discord."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Discord</Text>
+      <Text style={styles.cardCopy}>
+        Connect Discord so your plan can unlock the matching role.
+      </Text>
+      {message ? <Text style={styles.cardCopy}>{message}</Text> : null}
+      <Pressable
+        disabled={pending}
+        onPress={() => void (user.discordLinked ? disconnect() : connect())}
+        style={({ pressed }) => [styles.helpRow, pressed ? styles.pressed : null]}
+      >
+        <DiscordIcon size={18} />
+        <Text style={styles.helpRowText}>
+          {pending
+            ? "Working…"
+            : user.discordLinked
+              ? "Disconnect Discord"
+              : "Connect Discord"}
+        </Text>
+      </Pressable>
     </View>
   );
 }
