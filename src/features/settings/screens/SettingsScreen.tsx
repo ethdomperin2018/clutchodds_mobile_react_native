@@ -491,9 +491,13 @@ function DiscordSection({
     setPending(true);
     setMessage(null);
     try {
-      await connectDiscord();
+      const result = await connectDiscord();
       onChanged();
-      setMessage("Discord is connected. We sent the invite to your email.");
+      setMessage(
+        result === "linked_invite"
+          ? "Discord is connected. We could not add you automatically, so we sent the invite to your email."
+          : "Discord is connected. You're in the server."
+      );
     } catch (error) {
       if (error instanceof DiscordConnectCancelledError) return;
       setMessage(userFacingMessage(error, "Could not connect Discord."));

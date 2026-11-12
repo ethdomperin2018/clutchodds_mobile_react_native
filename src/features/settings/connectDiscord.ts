@@ -6,7 +6,9 @@ import { apiRequest } from "@/lib/api/client";
 WebBrowser.maybeCompleteAuthSession();
 
 const MESSAGES: Record<string, string> = {
-  linked: "Discord is connected.",
+  linked: "Discord is connected. You're in the server.",
+  linked_invite:
+    "Discord is connected. We could not add you automatically, so we sent the invite to your email.",
   discord_taken: "That Discord account is already connected to another user.",
   discord_denied: "Discord connect was cancelled.",
   discord_not_configured: "Discord connect is not configured yet.",
@@ -21,7 +23,7 @@ export class DiscordConnectCancelledError extends Error {
   }
 }
 
-export async function connectDiscord(): Promise<void> {
+export async function connectDiscord(): Promise<"linked" | "linked_invite"> {
   const redirectUri = Linking.createURL("discord");
   const { url } = await apiRequest<{ url: string }>("/api/discord/connect", {
     method: "POST",
@@ -30,7 +32,7 @@ export async function connectDiscord(): Promise<void> {
 
   if (Platform.OS === "web" && typeof window !== "undefined") {
     window.location.assign(url);
-    return;
+    return new Promise(() => {});
   }
 
   const result = await WebBrowser.openAuthSessionAsync(url, redirectUri, {
@@ -47,7 +49,12 @@ export async function connectDiscord(): Promise<void> {
 
   const parsed = new URL(result.url);
   const code = parsed.searchParams.get("discord");
-  if (code === "linked") return;
+  if (code === "linked" || code === "linked_invite") {
+    if (code === "linked_invite" || parsed.searchParams.get("joined") === "0") {
+      return "linked_invite";
+    }
+    return "linked";
+  }
   throw new Error(MESSAGES[code ?? ""] ?? "Discord connect failed. Please try again.");
 }
 

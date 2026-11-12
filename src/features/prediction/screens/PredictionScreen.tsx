@@ -142,6 +142,9 @@ function EliteBoardShell({
         record={board.visibleRecord}
         today={board.today}
       />
+      <Text style={styles.resultsNote}>
+        Prediction results are updated around 11:30 AM ET.
+      </Text>
 
       <PredictionRefreshControls
         autoRefresh={board.autoRefresh}
@@ -322,6 +325,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.pageSubtitle,
+  },
+  resultsNote: {
+    fontFamily: fonts.sansRegular,
+    color: "#71717A",
+    fontSize: 12,
+    lineHeight: 16,
   },
   /** Matches web AppPageHeader badge: rounded + bg-violet-600 + text-xs. */
   eliteBadge: {
