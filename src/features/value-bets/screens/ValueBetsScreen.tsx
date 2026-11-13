@@ -16,6 +16,7 @@ import { OddsApiErrorBanner } from "@/components/ui/OddsApiErrorBanner";
 import { AccountInactiveNotice } from "@/features/auth/AccountInactiveNotice";
 import { useSession } from "@/features/auth/SessionProvider";
 import { ValueBetDetailModal } from "@/features/value-bets/ValueBetDetailModal";
+import { ValueBetMobileCard } from "@/features/value-bets/ValueBetMobileCard";
 import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   ValueBetsBoardUiProvider,

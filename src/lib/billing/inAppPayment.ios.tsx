@@ -13,6 +13,7 @@ import {
   type Purchase,
 } from "expo-iap";
 import { useSession } from "@/features/auth/SessionProvider";
+import { billingApi, type CheckoutPlan } from "@/lib/api/endpoints/billing";
 import { userFacingMessage } from "@/lib/userFacingMessage";
 import {
   APPLE_PRODUCT_SKUS,
